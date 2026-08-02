@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { Menu, X, Bell, Landmark } from "lucide-react";
 import { Button } from "../ui/button";
 import { Container } from "../ui/container";
@@ -11,7 +12,6 @@ import { cn } from "@/lib/utils";
 export const Navbar = React.forwardRef(({
   className,
   user,
-  onLogin,
   onLogout,
   activeLink = "Home",
   ...props
@@ -19,10 +19,9 @@ export const Navbar = React.forwardRef(({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { name: "Home", href: "#" },
-    { name: "Submit Grievance", href: "#" },
-    { name: "Track Status", href: "#" },
-    { name: "FAQ", href: "#" },
+    { name: "Home", href: "/" },
+    { name: "Features", href: "#features" },
+    { name: "About", href: "#about" },
   ];
 
   return (
@@ -37,7 +36,7 @@ export const Navbar = React.forwardRef(({
       <Container size="lg">
         <div className="flex h-16 items-center justify-between">
           {/* Logo & Portal Identity */}
-          <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
             <Landmark
               className="size-6 text-primary shrink-0"
               aria-hidden="true"
@@ -48,7 +47,7 @@ export const Navbar = React.forwardRef(({
             <span className="hidden rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary sm:inline-block">
               Official
             </span>
-          </div>
+          </Link>
 
           {/* Desktop Navigation Links */}
           <nav
@@ -103,13 +102,14 @@ export const Navbar = React.forwardRef(({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={onLogin}
+                  as={Link}
+                  to="/login"
                   className="hidden sm:inline-flex"
                 >
-                  Sign In
+                  Login
                 </Button>
-                <Button variant="primary" size="sm">
-                  Register
+                <Button variant="primary" size="sm" as={Link} to="/signup">
+                  Sign Up
                 </Button>
               </div>
             )}
@@ -154,8 +154,11 @@ export const Navbar = React.forwardRef(({
             ))}
             {!user ? (
               <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-neutral-200">
-                <Button variant="outline" onClick={onLogin} className="w-full">
-                  Sign In
+                <Button variant="outline" as={Link} to="/login" onClick={() => setMobileMenuOpen(false)} className="w-full">
+                  Login
+                </Button>
+                <Button variant="primary" as={Link} to="/signup" onClick={() => setMobileMenuOpen(false)} className="w-full">
+                  Sign Up
                 </Button>
               </div>
             ) : (
@@ -168,7 +171,7 @@ export const Navbar = React.forwardRef(({
                     {user.role}
                   </span>
                 </div>
-                <Button variant="outline" onClick={onLogout} className="w-full">
+                <Button variant="outline" onClick={() => { onLogout?.(); setMobileMenuOpen(false); }} className="w-full">
                   Sign Out
                 </Button>
               </div>
