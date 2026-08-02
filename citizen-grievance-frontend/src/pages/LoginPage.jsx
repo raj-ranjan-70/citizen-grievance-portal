@@ -26,7 +26,12 @@ export const LoginPage = () => {
   // Validation & Submission states
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  const [globalError, setGlobalError] = useState("");
+  const [globalError, setGlobalError] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("expired") === "true"
+      ? "Your session has expired. Please sign in again."
+      : "";
+  });
   const [submitting, setSubmitting] = useState(false);
 
   // Email format validation helper
@@ -93,11 +98,12 @@ export const LoginPage = () => {
 
     setSubmitting(true);
     try {
-      // Calls AuthContext mock login
+      // Calls AuthContext login
       await login({ email, password });
       navigate("/dashboard");
-    } catch {
-      setGlobalError("Invalid email or password.");
+    } catch (err) {
+      const message = err.response?.data?.message || "Invalid email or password.";
+      setGlobalError(message);
     } finally {
       setSubmitting(false);
     }

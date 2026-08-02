@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useState, useEffect } from "react";
 import { authService } from "@/services/authService";
+import { api } from "@/services/api";
 
 export const AuthContext = createContext(undefined);
 
@@ -25,6 +26,27 @@ export const AuthProvider = ({ children }) => {
       }
     };
     initAuth();
+  }, []);
+
+  useEffect(() => {
+    // Add interceptor to capture session expirations (401 response status)
+    const interceptor = api.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response && error.response.status === 401) {
+          setUser(null);
+          // Redirect the browser to login if they are currently inside a protected dashboard route
+          if (window.location.pathname.startsWith("/dashboard")) {
+            window.location.href = "/login?expired=true";
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      api.interceptors.response.eject(interceptor);
+    };
   }, []);
 
   const login = async (credentials) => {

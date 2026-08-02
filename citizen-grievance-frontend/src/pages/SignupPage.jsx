@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Landmark, Eye, EyeOff, Loader2, CheckCircle2 } from "lucide-react";
+import { Landmark, Eye, EyeOff, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { authService } from "@/services/authService";
 
 /**
  * SignupPage component.
@@ -36,6 +37,7 @@ export const SignupPage = () => {
   // Global flow states
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [globalError, setGlobalError] = useState("");
 
   // Password Strength Evaluator
   const getPasswordStrength = (pass) => {
@@ -169,14 +171,19 @@ export const SignupPage = () => {
     }
 
     setSubmitting(true);
-    // Simulating mock signup delay, then redirecting
-    setTimeout(() => {
-      setSubmitting(false);
+    setGlobalError("");
+    try {
+      await authService.signup({ name, email, password });
       setSuccess(true);
       setTimeout(() => {
         navigate("/login");
       }, 2500);
-    }, 1500);
+    } catch (err) {
+      const msg = err.response?.data?.message || "An error occurred during registration. Please try again.";
+      setGlobalError(msg);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const isFormInvalid =
@@ -232,6 +239,18 @@ export const SignupPage = () => {
                   <p className="font-semibold">Account created successfully!</p>
                   <p className="text-xs text-success/80 mt-0.5">Redirecting to sign-in page in a moment...</p>
                 </div>
+              </div>
+            )}
+
+            {/* Global Error Banner */}
+            {globalError && (
+              <div
+                className="flex items-start gap-3 p-3.5 bg-error/10 border border-error/20 rounded-md text-error text-sm font-medium"
+                role="alert"
+                aria-live="assertive"
+              >
+                <AlertCircle className="size-5 shrink-0 mt-0.5" aria-hidden="true" />
+                <span>{globalError}</span>
               </div>
             )}
 
