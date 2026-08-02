@@ -1,4 +1,5 @@
-import React from "react";
+/* eslint-disable react-refresh/only-export-components */
+import { forwardRef } from "react";
 import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
@@ -36,7 +37,7 @@ export const buttonVariants = cva(
   }
 );
 
-export const Button = React.forwardRef(({
+export const Button = forwardRef(({
   className,
   variant,
   size,
