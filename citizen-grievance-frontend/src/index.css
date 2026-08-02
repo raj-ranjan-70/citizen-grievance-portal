@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand/Primary Colors - Trust Blue */
+  --color-primary: hsl(221.2 83.2% 53.3%);
+  --color-primary-hover: hsl(221.2 83.2% 45%);
+  --color-primary-active: hsl(221.2 83.2% 38%);
+  --color-primary-foreground: hsl(0 0% 100%);
+
+  /* Secondary Colors - Professional Gray/Slate */
+  --color-secondary: hsl(210 40% 96.1%);
+  --color-secondary-hover: hsl(210 40% 90%);
+  --color-secondary-active: hsl(210 40% 84%);
+  --color-secondary-foreground: hsl(222.2 47.4% 11.2%);
+
+  /* Status Colors: Success - Emerald Resolution */
+  --color-success: hsl(142.1 76.2% 36.3%);
+  --color-success-foreground: hsl(0 0% 100%);
+
+  /* Status Colors: Warning - Amber Review */
+  --color-warning: hsl(37.9 92.1% 50.2%);
+  --color-warning-foreground: hsl(222.2 47.4% 11.2%);
+
+  /* Status Colors: Error - Crimson Urgent */
+  --color-error: hsl(346.8 84.1% 61.2%);
+  --color-error-foreground: hsl(0 0% 100%);
+
+  /* Neutral Slate scale for borders, background, text levels */
+  --color-neutral-50: hsl(210 40% 98%);
+  --color-neutral-100: hsl(210 40% 96.1%);
+  --color-neutral-200: hsl(214.3 31.8% 91.4%);
+  --color-neutral-300: hsl(212.7 26.8% 83.9%);
+  --color-neutral-400: hsl(215 20.2% 65.1%);
+  --color-neutral-500: hsl(215.4 16.3% 46.9%);
+  --color-neutral-600: hsl(215.3 19.3% 34.5%);
+  --color-neutral-700: hsl(215.3 25% 26.7%);
+  --color-neutral-800: hsl(217.2 32.6% 17.5%);
+  --color-neutral-900: hsl(222.2 47.4% 11.2%);
+  --color-neutral-950: hsl(222.2 84% 4.9%);
+
+  /* Semantic UI tokens (prepared for dark mode expansion) */
+  --color-background: hsl(0 0% 100%);
+  --color-foreground: hsl(222.2 47.4% 11.2%);
+  --color-muted: hsl(210 40% 96.1%);
+  --color-muted-foreground: hsl(215.4 16.3% 46.9%);
+  --color-accent: hsl(210 40% 96.1%);
+  --color-accent-foreground: hsl(222.2 47.4% 11.2%);
+  --color-border: hsl(214.3 31.8% 91.4%);
+  --color-input: hsl(214.3 31.8% 91.4%);
+  --color-ring: hsl(221.2 83.2% 53.3%);
+
+  /* Typography Fonts */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-heading: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* Border Radii */
+  --radius-sm: 0.25rem;    /* 4px - Small items, checkboxes */
+  --radius-md: 0.5rem;     /* 8px - Buttons, input fields */
+  --radius-lg: 0.75rem;    /* 12px - Cards, dropdown popovers */
+  --radius-xl: 1rem;       /* 16px - Hero callouts, modals */
+
+  /* Shadows (Minimal & Trustworthy) */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.04), 0 4px 6px -4px rgb(0 0 0 / 0.04);
+}
+
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    color: var(--color-neutral-900);
+  }
+
+  /* Accessible focus indicators for keyboard navigation */
+  *:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+}
