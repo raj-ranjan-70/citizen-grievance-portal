@@ -1,4 +1,5 @@
-import React, { createContext, useState, useEffect } from "react";
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useState, useEffect } from "react";
 import { authService } from "@/services/authService";
 
 export const AuthContext = createContext(undefined);
@@ -16,7 +17,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const currentUser = await authService.getCurrentUser();
         setUser(currentUser);
-      } catch (error) {
+      } catch {
         // Safe to ignore on mount, user is unauthenticated or cookie is expired
         setUser(null);
       } finally {
