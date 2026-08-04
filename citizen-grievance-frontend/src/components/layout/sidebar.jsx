@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import {
   ChevronLeft,
   ChevronRight,
@@ -8,39 +9,52 @@ import {
   Users,
   ShieldCheck,
   HelpCircle,
+  PlusCircle,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 
 /**
- * Collapsible side navigation drawer for official staff dashboards.
+ * Collapsible side navigation drawer for citizen and official dashboards.
  * Dynamically switches menus based on roles and supports badge highlights.
  */
 export const Sidebar = React.forwardRef(({
   className,
-  role = "officer",
-  activeItem = "Dashboard",
+  role = "citizen",
+  activeItem,
   onSelect,
   ...props
 }, ref) => {
   const [collapsed, setCollapsed] = useState(false);
+  const location = useLocation();
+
+  const citizenLinks = [
+    { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
+    { name: "My Complaints", icon: FileText, path: "/complaints" },
+    { name: "New Complaint", icon: PlusCircle, path: "/complaints/new" },
+  ];
 
   const officerLinks = [
-    { name: "Dashboard", icon: LayoutDashboard },
-    { name: "All Grievances", icon: FileText, badge: "12" },
-    { name: "Support/FAQ", icon: HelpCircle },
-    { name: "Settings", icon: Settings },
+    { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
+    { name: "All Grievances", icon: FileText, badge: "12", path: "/dashboard" },
+    { name: "Support/FAQ", icon: HelpCircle, path: "/dashboard" },
+    { name: "Settings", icon: Settings, path: "/dashboard" },
   ];
 
   const adminLinks = [
-    { name: "Dashboard", icon: LayoutDashboard },
-    { name: "All Grievances", icon: FileText, badge: "45" },
-    { name: "User Management", icon: Users },
-    { name: "System Logs", icon: ShieldCheck },
-    { name: "Settings", icon: Settings },
+    { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
+    { name: "All Grievances", icon: FileText, badge: "45", path: "/dashboard" },
+    { name: "User Management", icon: Users, path: "/dashboard" },
+    { name: "System Logs", icon: ShieldCheck, path: "/dashboard" },
+    { name: "Settings", icon: Settings, path: "/dashboard" },
   ];
 
-  const menuItems = role === "admin" ? adminLinks : officerLinks;
+  let menuItems = citizenLinks;
+  if (role === "admin") {
+    menuItems = adminLinks;
+  } else if (role === "officer") {
+    menuItems = officerLinks;
+  }
 
   return (
     <aside
@@ -59,10 +73,16 @@ export const Sidebar = React.forwardRef(({
       >
         {menuItems.map((item) => {
           const Icon = item.icon;
-          const isActive = item.name === activeItem;
+          // Determine active status by matching pathname or explicit prop
+          const isActive = activeItem
+            ? item.name === activeItem
+            : location.pathname === item.path ||
+              (item.path !== "/dashboard" && location.pathname.startsWith(item.path));
+
           return (
-            <button
+            <Link
               key={item.name}
+              to={item.path}
               onClick={() => onSelect?.(item.name)}
               className={cn(
                 "w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all group relative focus-visible:ring-inset",
@@ -107,7 +127,7 @@ export const Sidebar = React.forwardRef(({
                   {item.name} {item.badge && `(${item.badge})`}
                 </span>
               )}
-            </button>
+            </Link>
           );
         })}
       </nav>
