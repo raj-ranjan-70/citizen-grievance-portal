@@ -1,16 +1,15 @@
 package com.raj.citizen_grievance_backend;
 
-import com.raj.citizen_grievance_backend.entity.ComplaintCategory;
+import com.raj.citizen_grievance_backend.authentication.repository.UserSessionRepository;
 import com.raj.citizen_grievance_backend.entity.User;
-import com.raj.citizen_grievance_backend.repository.ComplaintCategoryRepository;
 import com.raj.citizen_grievance_backend.repository.ComplaintRepository;
 import com.raj.citizen_grievance_backend.repository.UserRepository;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -34,115 +33,118 @@ class ComplaintIntegrationTest {
     private ComplaintRepository complaintRepository;
 
     @Autowired
-    private ComplaintCategoryRepository categoryRepository;
+    private UserSessionRepository sessionRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    private MockHttpSession userASession;
-    private MockHttpSession userBSession;
+    private Cookie userACookie;
+    private Cookie userBCookie;
     private Long createdComplaintId;
 
     @BeforeAll
-    void setup() {
-        // Clean up test data
+    void setup() throws Exception {
+        // Clean up test data (delete sessions first to avoid foreign key constraints)
         complaintRepository.deleteAll();
-        userRepository.findByEmail("complaintest-a@test.com")
-                .ifPresent(u -> userRepository.delete(u));
-        userRepository.findByEmail("complaintest-b@test.com")
-                .ifPresent(u -> userRepository.delete(u));
+        sessionRepository.deleteAll();
+        userRepository.findByEmail("complaintest-a@test.com").ifPresent(userRepository::delete);
+        userRepository.findByEmail("complaintest-b@test.com").ifPresent(userRepository::delete);
 
         // Create test users
-        User userA = userRepository.save(User.builder()
+        userRepository.save(User.builder()
                 .name("Test User A")
                 .email("complaintest-a@test.com")
                 .password(passwordEncoder.encode("password123"))
                 .role("citizen")
                 .build());
 
-        User userB = userRepository.save(User.builder()
+        userRepository.save(User.builder()
                 .name("Test User B")
                 .email("complaintest-b@test.com")
                 .password(passwordEncoder.encode("password123"))
                 .role("citizen")
                 .build());
 
-        // Build sessions with password-stripped users (matching AuthController login behavior)
-        userASession = new MockHttpSession();
-        userASession.setAttribute("currentUser", User.builder()
-                .id(userA.getId())
-                .name(userA.getName())
-                .email(userA.getEmail())
-                .role(userA.getRole())
-                .build());
+        // Perform login for User A to fetch session cookie
+        MvcResult resultA = mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "email": "complaintest-a@test.com",
+                                    "password": "password123",
+                                    "rememberMe": true
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andReturn();
+        userACookie = resultA.getResponse().getCookie("JSESSIONID");
 
-        userBSession = new MockHttpSession();
-        userBSession.setAttribute("currentUser", User.builder()
-                .id(userB.getId())
-                .name(userB.getName())
-                .email(userB.getEmail())
-                .role(userB.getRole())
-                .build());
+        // Perform login for User B to fetch session cookie
+        MvcResult resultB = mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "email": "complaintest-b@test.com",
+                                    "password": "password123",
+                                    "rememberMe": true
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andReturn();
+        userBCookie = resultB.getResponse().getCookie("JSESSIONID");
     }
 
     @AfterAll
     void cleanup() {
         complaintRepository.deleteAll();
-        userRepository.findByEmail("complaintest-a@test.com")
-                .ifPresent(u -> userRepository.delete(u));
-        userRepository.findByEmail("complaintest-b@test.com")
-                .ifPresent(u -> userRepository.delete(u));
+        sessionRepository.deleteAll();
+        userRepository.findByEmail("complaintest-a@test.com").ifPresent(userRepository::delete);
+        userRepository.findByEmail("complaintest-b@test.com").ifPresent(userRepository::delete);
     }
 
     @Test
     @Order(1)
     void shouldCreateComplaintSuccessfully() throws Exception {
-        // Get a valid category ID
-        ComplaintCategory category = categoryRepository.findByName("Roads & Infrastructure")
-                .orElseThrow();
-
         String requestBody = """
                 {
                     "title": "Pothole on Main Street",
                     "description": "Large pothole causing traffic issues near the intersection.",
-                    "categoryId": %d
+                    "category": "Roads & Infrastructure",
+                    "priority": "MEDIUM"
                 }
-                """.formatted(category.getId());
+                """;
 
-        MvcResult result = mockMvc.perform(post("/api/complaints")
-                        .session(userASession)
+        MvcResult result = mockMvc.perform(post("/api/v1/complaints")
+                        .cookie(userACookie)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.title").value("Pothole on Main Street"))
-                .andExpect(jsonPath("$.status").value("PENDING"))
-                .andExpect(jsonPath("$.categoryName").value("Roads & Infrastructure"))
-                .andExpect(jsonPath("$.userName").value("Test User A"))
+                .andExpect(jsonPath("$.status").value("SUBMITTED"))
+                .andExpect(jsonPath("$.category").value("Roads & Infrastructure"))
                 .andReturn();
 
-        // Extract the complaint ID for later tests
-        String response = result.getResponse().getContentAsString();
+        String responseContent = result.getResponse().getContentAsString();
         createdComplaintId = Long.parseLong(
-                response.replaceAll(".*\"id\":(\\d+).*", "$1"));
+                responseContent.replaceAll(".*\"id\":(\\d+).*", "$1"));
     }
 
     @Test
     @Order(2)
     void shouldListOwnComplaints() throws Exception {
-        mockMvc.perform(get("/api/complaints")
-                        .session(userASession))
+        mockMvc.perform(get("/api/v1/complaints")
+                        .cookie(userACookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].title").value("Pothole on Main Street"))
-                .andExpect(jsonPath("$[0].userName").value("Test User A"));
+                .andExpect(jsonPath("$[0].title").value("Pothole on Main Street"));
     }
 
     @Test
     @Order(3)
     void shouldViewComplaintDetails() throws Exception {
-        mockMvc.perform(get("/api/complaints/" + createdComplaintId)
-                        .session(userASession))
+        mockMvc.perform(get("/api/v1/complaints/" + createdComplaintId)
+                        .cookie(userACookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(createdComplaintId))
                 .andExpect(jsonPath("$.title").value("Pothole on Main Street"))
@@ -152,13 +154,19 @@ class ComplaintIntegrationTest {
     @Test
     @Order(4)
     void shouldReturn401WhenNotAuthenticated() throws Exception {
-        mockMvc.perform(get("/api/complaints"))
+        mockMvc.perform(get("/api/v1/complaints"))
                 .andExpect(status().isUnauthorized());
 
-        mockMvc.perform(post("/api/complaints")
+        // Use valid fields so it passes DTO validation, but fails context authentication (401)
+        mockMvc.perform(post("/api/v1/complaints")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"title": "Test", "description": "Test", "categoryId": 1}
+                                {
+                                    "title": "Pothole on Main Street",
+                                    "description": "Large pothole causing traffic issues near the intersection.",
+                                    "category": "Roads & Infrastructure",
+                                    "priority": "MEDIUM"
+                                }
                                 """))
                 .andExpect(status().isUnauthorized());
     }
@@ -166,8 +174,8 @@ class ComplaintIntegrationTest {
     @Test
     @Order(5)
     void shouldReturn404ForNonExistentComplaint() throws Exception {
-        mockMvc.perform(get("/api/complaints/99999")
-                        .session(userASession))
+        mockMvc.perform(get("/api/v1/complaints/99999")
+                        .cookie(userACookie))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").exists());
     }
@@ -179,12 +187,13 @@ class ComplaintIntegrationTest {
                 {
                     "title": "",
                     "description": "",
-                    "categoryId": null
+                    "category": "",
+                    "priority": null
                 }
                 """;
 
-        mockMvc.perform(post("/api/complaints")
-                        .session(userASession)
+        mockMvc.perform(post("/api/v1/complaints")
+                        .cookie(userACookie)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidRequest))
                 .andExpect(status().isBadRequest())
@@ -195,8 +204,8 @@ class ComplaintIntegrationTest {
     @Order(7)
     void shouldReturn403WhenAccessingOtherUsersComplaint() throws Exception {
         // User B tries to access User A's complaint
-        mockMvc.perform(get("/api/complaints/" + createdComplaintId)
-                        .session(userBSession))
+        mockMvc.perform(get("/api/v1/complaints/" + createdComplaintId)
+                        .cookie(userBCookie))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.message").value("You do not have permission to view this complaint"));
     }
@@ -205,8 +214,8 @@ class ComplaintIntegrationTest {
     @Order(8)
     void shouldReturnEmptyListForUserWithNoComplaints() throws Exception {
         // User B has no complaints
-        mockMvc.perform(get("/api/complaints")
-                        .session(userBSession))
+        mockMvc.perform(get("/api/v1/complaints")
+                        .cookie(userBCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$").isEmpty());
@@ -214,11 +223,25 @@ class ComplaintIntegrationTest {
 
     @Test
     @Order(9)
-    void shouldListCategories() throws Exception {
-        mockMvc.perform(get("/api/complaints/categories")
-                        .session(userASession))
+    void shouldEnforceIdleSessionTimeout() throws Exception {
+        // Build an expired cookie (fake session ID or invalid cookie value)
+        Cookie expiredCookie = new Cookie("JSESSIONID", "invalid-or-expired-session-id");
+        mockMvc.perform(get("/api/v1/auth/me")
+                        .cookie(expiredCookie))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @Order(10)
+    void shouldLogoutSuccessfully() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/logout")
+                        .cookie(userACookie))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].name").exists());
+                .andExpect(jsonPath("$.success").value(true));
+
+        // Subsequent access should fail
+        mockMvc.perform(get("/api/v1/auth/me")
+                        .cookie(userACookie))
+                .andExpect(status().isUnauthorized());
     }
 }

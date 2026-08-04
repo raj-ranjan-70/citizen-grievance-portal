@@ -1,5 +1,9 @@
 package com.raj.citizen_grievance_backend.exception;
 
+import com.raj.citizen_grievance_backend.authentication.exception.ConcurrentSessionException;
+import com.raj.citizen_grievance_backend.authentication.exception.InvalidSessionException;
+import com.raj.citizen_grievance_backend.authentication.exception.SessionExpiredException;
+import com.raj.citizen_grievance_backend.authentication.exception.UnauthenticatedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -33,6 +37,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Map<String, String>> handleAccessDenied(AccessDeniedException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("message", ex.getMessage()));
+    }
+
+    @ExceptionHandler({
+            UnauthenticatedException.class,
+            InvalidSessionException.class,
+            SessionExpiredException.class,
+            ConcurrentSessionException.class
+    })
+    public ResponseEntity<Map<String, String>> handleAuthenticationExceptions(RuntimeException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(Map.of("message", ex.getMessage()));
     }
 }

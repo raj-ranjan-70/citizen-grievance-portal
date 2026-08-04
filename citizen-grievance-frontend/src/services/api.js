@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const baseURL = import.meta.env.VITE_API_BASE_URL || "/api";
+const baseURL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
 /**
  * Global Axios instance configured for cookie-based Spring Boot authentication.
