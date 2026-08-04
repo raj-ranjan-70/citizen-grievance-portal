@@ -2,14 +2,12 @@ package com.raj.citizen_grievance_backend.controller;
 
 import com.raj.citizen_grievance_backend.dto.ComplaintRequest;
 import com.raj.citizen_grievance_backend.dto.ComplaintResponse;
-import com.raj.citizen_grievance_backend.entity.ComplaintCategory;
 import com.raj.citizen_grievance_backend.entity.User;
-import com.raj.citizen_grievance_backend.repository.ComplaintCategoryRepository;
 import com.raj.citizen_grievance_backend.service.ComplaintService;
-import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,21 +18,17 @@ import java.util.Map;
 public class ComplaintController {
 
     private final ComplaintService complaintService;
-    private final ComplaintCategoryRepository categoryRepository;
 
-    public ComplaintController(ComplaintService complaintService,
-                               ComplaintCategoryRepository categoryRepository) {
+    public ComplaintController(ComplaintService complaintService) {
         this.complaintService = complaintService;
-        this.categoryRepository = categoryRepository;
     }
 
     /**
      * POST /api/complaints — Create a new complaint.
      */
     @PostMapping
-    public ResponseEntity<?> createComplaint(@Valid @RequestBody ComplaintRequest request,
-                                             HttpSession session) {
-        User currentUser = getAuthenticatedUser(session);
+    public ResponseEntity<?> createComplaint(@Valid @RequestBody ComplaintRequest request) {
+        User currentUser = getAuthenticatedUser();
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "Authentication required"));
@@ -48,14 +42,14 @@ public class ComplaintController {
      * GET /api/complaints — List all complaints for the authenticated user.
      */
     @GetMapping
-    public ResponseEntity<?> getMyComplaints(HttpSession session) {
-        User currentUser = getAuthenticatedUser(session);
+    public ResponseEntity<?> getMyComplaints() {
+        User currentUser = getAuthenticatedUser();
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "Authentication required"));
         }
 
-        List<ComplaintResponse> complaints = complaintService.getComplaintsByUser(currentUser.getId());
+        List<ComplaintResponse> complaints = complaintService.getComplaintsByCitizen(currentUser.getId());
         return ResponseEntity.ok(complaints);
     }
 
@@ -63,8 +57,8 @@ public class ComplaintController {
      * GET /api/complaints/{id} — View a single complaint (must be owned by current user).
      */
     @GetMapping("/{id}")
-    public ResponseEntity<?> getComplaintById(@PathVariable Long id, HttpSession session) {
-        User currentUser = getAuthenticatedUser(session);
+    public ResponseEntity<?> getComplaintById(@PathVariable Long id) {
+        User currentUser = getAuthenticatedUser();
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "Authentication required"));
@@ -75,21 +69,41 @@ public class ComplaintController {
     }
 
     /**
-     * GET /api/complaints/categories — List all complaint categories.
+     * PUT /api/complaints/{id} — Update an existing complaint.
      */
-    @GetMapping("/categories")
-    public ResponseEntity<?> getCategories(HttpSession session) {
-        User currentUser = getAuthenticatedUser(session);
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateComplaint(@PathVariable Long id,
+                                             @Valid @RequestBody ComplaintRequest request) {
+        User currentUser = getAuthenticatedUser();
         if (currentUser == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "Authentication required"));
         }
 
-        List<ComplaintCategory> categories = categoryRepository.findAll();
-        return ResponseEntity.ok(categories);
+        ComplaintResponse response = complaintService.updateComplaint(id, request, currentUser);
+        return ResponseEntity.ok(response);
     }
 
-    private User getAuthenticatedUser(HttpSession session) {
-        return (User) session.getAttribute("currentUser");
+    /**
+     * DELETE /api/complaints/{id} — Delete an existing complaint.
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteComplaint(@PathVariable Long id) {
+        User currentUser = getAuthenticatedUser();
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Authentication required"));
+        }
+
+        complaintService.deleteComplaint(id, currentUser);
+        return ResponseEntity.ok(Map.of("success", true, "message", "Complaint deleted successfully."));
+    }
+
+    private User getAuthenticatedUser() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof User) {
+            return (User) authentication.getPrincipal();
+        }
+        return null;
     }
 }
