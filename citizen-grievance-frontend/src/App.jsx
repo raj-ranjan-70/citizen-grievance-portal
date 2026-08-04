@@ -10,6 +10,10 @@ import { LandingPage } from "@/pages/LandingPage";
 import { LoginPage } from "@/pages/LoginPage";
 import { SignupPage } from "@/pages/SignupPage";
 import { DashboardPage } from "@/pages/DashboardPage";
+import { MyComplaintsPage } from "@/pages/MyComplaintsPage";
+import { CreateComplaintPage } from "@/pages/CreateComplaintPage";
+import { ComplaintDetailsPage } from "@/pages/ComplaintDetailsPage";
+import { EditComplaintPage } from "@/pages/EditComplaintPage";
 
 function App() {
   return (
@@ -41,14 +45,17 @@ function App() {
 
           {/* Protected Routes wrapped in ProtectedLayout & ProtectedRoute guard */}
           <Route
-            path="/dashboard"
             element={
               <ProtectedRoute>
                 <ProtectedLayout />
               </ProtectedRoute>
             }
           >
-            <Route index element={<DashboardPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/complaints" element={<MyComplaintsPage />} />
+            <Route path="/complaints/new" element={<CreateComplaintPage />} />
+            <Route path="/complaints/:id" element={<ComplaintDetailsPage />} />
+            <Route path="/complaints/:id/edit" element={<EditComplaintPage />} />
           </Route>
 
           {/* Fallback redirect */}
