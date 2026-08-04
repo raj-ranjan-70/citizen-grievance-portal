@@ -24,15 +24,19 @@ public class Complaint {
     private String description;
 
     @Column(nullable = false)
-    private String status; // PENDING, IN_PROGRESS, RESOLVED, REJECTED
+    private String category;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Priority priority;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Status status;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "category_id", nullable = false)
-    private ComplaintCategory category;
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "citizen_id", nullable = false)
+    private User citizen;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -42,6 +46,9 @@ public class Complaint {
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        if (status == null) {
+            status = Status.SUBMITTED;
+        }
     }
 
     @PreUpdate
