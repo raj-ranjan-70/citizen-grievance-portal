@@ -15,6 +15,7 @@ import { CreateComplaintPage } from "@/pages/CreateComplaintPage";
 import { ComplaintDetailsPage } from "@/pages/ComplaintDetailsPage";
 import { EditComplaintPage } from "@/pages/EditComplaintPage";
 
+
 function App() {
   return (
     <AuthProvider>

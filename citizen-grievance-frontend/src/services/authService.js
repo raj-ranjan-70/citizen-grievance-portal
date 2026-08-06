@@ -6,22 +6,22 @@ import api from "./api";
  */
 export const authService = {
   login: async (credentials) => {
-    const response = await api.post("/auth/login", credentials);
+    const response = await api.post("/v1/auth/login", credentials);
     return response.data;
   },
 
   signup: async (userData) => {
-    const response = await api.post("/auth/signup", userData);
+    const response = await api.post("/v1/auth/signup", userData);
     return response.data;
   },
 
   logout: async () => {
-    const response = await api.post("/auth/logout");
+    const response = await api.post("/v1/auth/logout");
     return response.data;
   },
 
   getCurrentUser: async () => {
-    const response = await api.get("/auth/me");
+    const response = await api.get("/v1/auth/me");
     return response.data;
   },
 };

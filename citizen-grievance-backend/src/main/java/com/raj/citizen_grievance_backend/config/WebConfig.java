@@ -1,30 +1,41 @@
 package com.raj.citizen_grievance_backend.config;
 
-import com.raj.citizen_grievance_backend.authentication.filter.AuthenticationFilter;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
-import org.springframework.context.annotation.Bean;
+import com.raj.citizen_grievance_backend.filter.AuthInterceptor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    private final AuthenticationFilter authenticationFilter;
+    private final AuthInterceptor authInterceptor;
 
-    public WebConfig(AuthenticationFilter authenticationFilter) {
-        this.authenticationFilter = authenticationFilter;
+    public WebConfig(AuthInterceptor authInterceptor) {
+        this.authInterceptor = authInterceptor;
     }
 
-    /**
-     * Registers our manual AuthenticationFilter to intercept all v1 API calls
-     * before hitting controllers.
-     */
-    @Bean
-    public FilterRegistrationBean<AuthenticationFilter> authenticationFilterRegistration() {
-        FilterRegistrationBean<AuthenticationFilter> registration = new FilterRegistrationBean<>();
-        registration.setFilter(authenticationFilter);
-        registration.addUrlPatterns("/api/v1/*");
-        registration.setOrder(1); // Sets precedence to run early in filter chain
-        return registration;
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(authInterceptor)
+                .addPathPatterns("/api/v1/users/**", "/api/v1/complaints/**")
+                .excludePathPatterns(
+                        "/api/v1/auth/login",
+                        "/api/v1/auth/signup",
+                        "/api/v1/auth/logout",
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**",
+                        "/swagger-resources/**",
+                        "/webjars/**"
+                );
+    }
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("http://localhost:5173", "http://localhost:3000")
+                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true);
     }
 }
