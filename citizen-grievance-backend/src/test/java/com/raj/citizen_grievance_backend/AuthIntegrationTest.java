@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class AuthIntegrationTest {
+public class AuthIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -46,7 +46,6 @@ class AuthIntegrationTest {
                 .name("John Doe")
                 .email("john.doe@example.com")
                 .password("password123")
-                .role(Role.CITIZEN)
                 .build();
 
         mockMvc.perform(post("/api/v1/auth/signup")
@@ -67,7 +66,6 @@ class AuthIntegrationTest {
                 .name("John Doe")
                 .email("john.doe@example.com")
                 .password("password123")
-                .role(Role.CITIZEN)
                 .build();
 
         // Register first time
@@ -91,7 +89,6 @@ class AuthIntegrationTest {
                 .name("") // blank
                 .email("invalid-email") // invalid email format
                 .password("123") // too short
-                .role(null) // null
                 .build();
 
         mockMvc.perform(post("/api/v1/auth/signup")
@@ -102,8 +99,7 @@ class AuthIntegrationTest {
                 .andExpect(jsonPath("$.errors").exists())
                 .andExpect(jsonPath("$.errors.name").exists())
                 .andExpect(jsonPath("$.errors.email").exists())
-                .andExpect(jsonPath("$.errors.password").exists())
-                .andExpect(jsonPath("$.errors.role").exists());
+                .andExpect(jsonPath("$.errors.password").exists());
     }
 
     @Test
@@ -113,7 +109,6 @@ class AuthIntegrationTest {
                 .name("Jane Doe")
                 .email("jane.doe@example.com")
                 .password("password123")
-                .role(Role.CITIZEN)
                 .build();
         mockMvc.perform(post("/api/v1/auth/signup")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -157,7 +152,6 @@ class AuthIntegrationTest {
                 .name("Session User")
                 .email("session@example.com")
                 .password("password123")
-                .role(Role.CITIZEN)
                 .build();
         mockMvc.perform(post("/api/v1/auth/signup")
                         .contentType(MediaType.APPLICATION_JSON)

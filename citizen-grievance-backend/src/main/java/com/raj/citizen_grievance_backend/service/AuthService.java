@@ -38,15 +38,12 @@ public class AuthService {
             throw new EmailAlreadyExistsException("Email '" + request.getEmail() + "' is already registered");
         }
 
-        // Set department to null if role is not OFFICER
-        Department dept = (request.getRole() == Role.OFFICER) ? request.getDepartment() : null;
-
         User user = User.builder()
                 .name(request.getName())
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole())
-                .department(dept)
+                .role(Role.CITIZEN)
+                .department(Department.NONE)
                 .build();
 
         User savedUser = userRepository.save(user);
