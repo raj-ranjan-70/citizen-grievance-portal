@@ -12,6 +12,10 @@ export const DashboardPage = () => {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
+  if (user?.role === "OFFICER") {
+    return <Navigate to="/officer/dashboard" replace />;
+  }
+
   return (
     <div className="p-8">
       <h2 className="text-2xl font-bold font-heading mb-2">Dashboard Page</h2>

@@ -35,10 +35,7 @@ export const Sidebar = React.forwardRef(({
   ];
 
   const officerLinks = [
-    { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-    { name: "All Grievances", icon: FileText, badge: "12", path: "/dashboard" },
-    { name: "Support/FAQ", icon: HelpCircle, path: "/dashboard" },
-    { name: "Settings", icon: Settings, path: "/dashboard" },
+    { name: "Officer Dashboard", icon: LayoutDashboard, path: "/officer/dashboard" },
   ];
 
   const adminLinks = [
