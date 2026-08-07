@@ -14,6 +14,7 @@ import { MyComplaintsPage } from "@/pages/MyComplaintsPage";
 import { CreateComplaintPage } from "@/pages/CreateComplaintPage";
 import { ComplaintDetailsPage } from "@/pages/ComplaintDetailsPage";
 import { EditComplaintPage } from "@/pages/EditComplaintPage";
+import { AdminDashboardPage } from "@/pages/AdminDashboardPage";
 
 
 function App() {
@@ -57,6 +58,7 @@ function App() {
             <Route path="/complaints/new" element={<CreateComplaintPage />} />
             <Route path="/complaints/:id" element={<ComplaintDetailsPage />} />
             <Route path="/complaints/:id/edit" element={<EditComplaintPage />} />
+            <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           </Route>
 
           {/* Fallback redirect */}
