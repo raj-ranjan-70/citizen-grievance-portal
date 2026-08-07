@@ -34,3 +34,8 @@
 - **Decision:** Validate the user role of the request initiator as `ADMIN` inside the service layer (`AdminService.java`) instead of relying solely on controller-level annotations.
 - **Rationale:** Preserves proper separation of concerns (keeping authorization rules inside the business logic layer) and makes security checks testable inside integration tests.
 
+## 9. Officer Role & Assignment Authorization checks
+- **Decision:** Validate the user role as `OFFICER` and enforce complaint ownership matching (`complaint.assignedOfficer.id === officerId`) inside `OfficerService.java` before allowing status updates or viewing active lists.
+- **Rationale:** Secures complaint life-cycle transactions so that municipal officers can only query and process complaints assigned to them, preventing unauthorized data tampering.
+
+
