@@ -22,7 +22,7 @@
   --color-warning-foreground: hsl(222.2 47.4% 11.2%);
 
   /* Status Colors: Error - Crimson Urgent */
-  --color-error: hsl(346.8 84.1% 61.2%);
+  --color-error: hsl(346.8 84.1% 40%);
   --color-error-foreground: hsl(0 0% 100%);
 
   /* Neutral Slate scale for borders, background, text levels */
