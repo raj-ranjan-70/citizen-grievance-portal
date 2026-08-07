@@ -1,30 +1,32 @@
-# Session Handoff - Citizen Grievance Portal
+# Session Handoff - Citizen Grievance Portal (Phase 2 Complete)
 
 ## Completed in Current Session
-- **Maven Configuration:** Added `springdoc-openapi-starter-webmvc-ui` dependency in `pom.xml` for Swagger.
-- **Persistence Layer:**
-  - Implemented `Role` and `Department` enums.
-  - Implemented the `User` entity (with UUID Primary Key and auditing timestamps).
-  - Implemented the `UserSession` entity (for persistent, test-compatible cookie authentication).
-  - Implemented `UserRepository` and `UserSessionRepository`.
-- **DTOs:** Implemented `SignupRequest`, `LoginRequest`, `UserResponse`, and `ApiResponse` matching the custom envelope design.
-- **Custom Password Utility:** Created custom `PasswordEncoder` and `Sha256PasswordEncoder` that hash passwords using SHA-256 with random salt strings, formatted as `salt:hash`.
-- **Business Services:** Implemented `AuthService` handling user signup, user login verification, and active session checking.
-- **REST Endpoints:** Implemented `AuthController` with `/signup` (201 Created), `/login` (200 OK), `/logout` (200 OK), and `/me` (200 OK) endpoints.
-- **Access Protection:** Created `AuthInterceptor` and registered it in `WebConfig` along with CORS configuration, protecting `/api/v1/users/**` and `/api/v1/complaints/**` while excluding public auth endpoints and Swagger paths.
-- **Exception Handling:** Added `GlobalExceptionHandler` mapping custom exceptions and Spring validation field errors into standard `ApiResponse` objects.
-- **Verification:** Created `AuthIntegrationTest` which fully tests signup/login/session lifecycle/logout.
-- **Database Reset:** Dropped the old local database schema and let Hibernate generate tables cleanly to resolve UUID schema incompatibility.
-- **Test Execution:** Ran `mvn clean test` resulting in `BUILD SUCCESS` (7 tests passed, 0 failures, 1 skipped).
+- **Enums & Persistence Layer:**
+  - Implemented `ComplaintStatus` (`PENDING`, `ASSIGNED`, `RESOLVED`, `REJECTED`) and `Priority` (`LOW`, `MEDIUM`, `HIGH`) enums.
+  - Implemented `Complaint` entity with UUID primary key, citizen mapping, title/description, category, priority, status, assigned officer, timestamps, and comments list.
+  - Implemented `Comment` entity with UUID primary key, complaint mapping, author mapping, content text, and created-at timestamp.
+  - Implemented `ComplaintRepository` and `CommentRepository` interfaces.
+- **DTOs & Validations:**
+  - Implemented `ComplaintRequest` and `ComplaintResponse` DTOs with validation rules and Swagger/OpenAPI schemas.
+  - Implemented `CommentRequest` and `CommentResponse` DTOs with validations and schemas.
+- **Exception Handling:**
+  - Created `ResourceNotFoundException`, `ForbiddenException`, and `BadRequestException` classes.
+  - Updated `GlobalExceptionHandler` to handle these custom exceptions and map them to HTTP 404, 403, and 400 respectively, with a standard `ApiResponse` wrapper.
+- **Business Services & Controllers:**
+  - Implemented `ComplaintService` managing complaint creation, updating, retrieval (by citizen ID and details), validation rules for deleting assigned complaints, and comments thread creation.
+  - Implemented `ComplaintController` exposing secure endpoints for `/api/v1/complaints` and comments, annotated fully with Swagger OpenAPI descriptions.
+- **Frontend React Integration:**
+  - Modified `AuthContext.jsx` to unwrap `UserResponse` from the `ApiResponse` payload envelope.
+  - Modified `complaintService.js` to unwrap data payloads and translate backend statuses (`PENDING` -> `SUBMITTED`, `ASSIGNED` -> `IN_PROGRESS`) for full UI compatibility. Added `addComment` Axios service.
+  - Modified `ComplaintDetailsPage.jsx` to display the comments thread (differentiating Citizen and Officer comments) and allow citizens to post follow-up comments.
+- **Verification:**
+  - Updated and enabled `ComplaintIntegrationTest.java` to use UUID key models and completely cover the REST APIs.
+  - Ran `mvn clean test` successfully (all 19 integration tests passed).
 
-## Next Steps / Phase 2 Tasks
-1. **Complaints Entity & Repository:**
-   - Create a `Complaint` entity with UUID PK, title, description, category, priority, status, and foreign keys referencing `User` (citizen creator and officer assignee).
-   - Create a `ComplaintRepository`.
-2. **Complaints DTOs & Service:**
-   - Create request/response DTOs for complaints.
-   - Implement business logic for creating complaints, assigning them automatically to relevant officers of specific departments, listing own complaints, and updating statuses.
-3. **Complaints Controller:**
-   - Implement `ComplaintController` with endpoints `/api/v1/complaints` (POST/GET/GET by ID).
-4. **Integration Test Suite Activation:**
-   - Restore the test methods in `ComplaintIntegrationTest.java` (uncomment the code) and enable it (remove `@Disabled` annotation) to verify the full citizen-grievance end-to-end integration.
+## Next Steps / Phase 3 Tasks
+1. **Officer Complaint Management:**
+   - Create endpoints for officers to view complaints assigned to their department.
+   - Implement assignment logic and category-based routing.
+   - Implement status updates (`ASSIGNED` -> `IN_PROGRESS` -> `RESOLVED` / `REJECTED`) by officers.
+2. **Admin Controls & Auditing:**
+   - Add admin dashboard features and system log auditing.

@@ -13,3 +13,15 @@
 ## 3. Swagger Configuration Integration
 - **Decision:** Add `springdoc-openapi-starter-webmvc-ui` dependency and configure Swagger annotations on DTOs and endpoints.
 - **Rationale:** Aligns with the project rule in `AGENTS.md` to keep Swagger documentation in sync with all controller endpoints.
+
+## 4. UUID Primary Keys for Phase 2 Entities
+- **Decision:** Use UUIDs (`BINARY(16)`) for the primary keys of the new `Complaint` and `Comment` entities, rather than standard auto-incrementing `Long` integers.
+- **Rationale:** Aligns with core project architecture constraints to use UUID primary keys for all database entities, preventing ID enumeration attacks.
+
+## 5. Frontend Mapping of DB Statuses
+- **Decision:** Map backend DB statuses (`PENDING` -> `SUBMITTED`, `ASSIGNED` -> `IN_PROGRESS`) inside the React service layer (`complaintService.js`) when retrieving lists/details.
+- **Rationale:** Ensures backend entity statuses adhere to Phase 2 specifications (`PENDING`, `ASSIGNED`, `RESOLVED`, `REJECTED`), while the React page views (`MyComplaintsPage.jsx`, `ComplaintDetailsPage.jsx`) continue to function without rewriting their internal edit/delete/badge conditional logic which expect `SUBMITTED` and `IN_PROGRESS`.
+
+## 6. Auth Context Response Unwrapping
+- **Decision:** Unwrap `response.data` within `AuthContext.jsx` when handling login, registration, and session load.
+- **Rationale:** Since all backend responses are wrapped in `ApiResponse<T>` envelopes, unwrapping the response data in the context ensures `{user.name}` and `{user.role}` properties accessed by layout components resolve correctly.

@@ -1,4 +1,4 @@
-# Database Schema - Citizen Grievance Portal (Phase 1)
+# Database Schema - Citizen Grievance Portal
 
 ## 1. `users` Table
 
@@ -15,10 +15,6 @@ Maps to the `User` entity. Stores authentication credentials and user profile in
 | `created_at` | `DATETIME(6)` | `NOT NULL`, `UNUPDATABLE` | Timestamp when the user registered. |
 | `updated_at` | `DATETIME(6)` | `NOT NULL` | Timestamp when the user profile was last updated. |
 
-### Indexes
-- Primary Key on `id`.
-- Unique constraint `UK6dotkott2kjsp8vw4d0m25fb7` on `email`.
-
 ---
 
 ## 2. `user_sessions` Table
@@ -32,5 +28,35 @@ Maps to the `UserSession` entity. Used to track active sessions across requests 
 | `last_access_time` | `DATETIME(6)` | `NOT NULL` | Time when the session was last verified. |
 | `expiry_time` | `DATETIME(6)` | `NOT NULL` | Absolute time after which the session is considered invalid. |
 
-### Foreign Keys
-- `FK8klxsgb8dcjjklmqebqp1twd5`: `user_id` references `users(id)`.
+---
+
+## 3. `complaints` Table
+
+Maps to the `Complaint` entity. Stores grievance details filed by citizens.
+
+| Column Name | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | `BINARY(16)` | `PRIMARY KEY`, `NOT NULL` | Unique identifier (UUID). |
+| `citizen_id` | `BINARY(16)` | `FOREIGN KEY`, `NOT NULL` | Reference to the user (Citizen) who filed it. |
+| `title` | `VARCHAR(255)` | `NOT NULL` | Title of the grievance. |
+| `description` | `TEXT` | `NOT NULL` | Detailed description of the grievance. |
+| `category` | `VARCHAR(255)` | `NOT NULL` | Category of the concern (e.g. Roads & Infrastructure). |
+| `priority` | `VARCHAR(50)` | `NOT NULL` | Priority rating: `LOW`, `MEDIUM`, `HIGH`. |
+| `status` | `VARCHAR(50)` | `NOT NULL` | Life-cycle status: `PENDING`, `ASSIGNED`, `RESOLVED`, `REJECTED`. |
+| `assigned_officer_id`| `BINARY(16)`| `FOREIGN KEY`, `NULLABLE` | Reference to the Officer assigned to address this. |
+| `created_at` | `DATETIME(6)` | `NOT NULL` | Timestamp when the grievance was filed. |
+| `updated_at` | `DATETIME(6)` | `NOT NULL` | Timestamp when last updated. |
+
+---
+
+## 4. `comments` Table
+
+Maps to the `Comment` entity. Stores the conversation thread history for complaints.
+
+| Column Name | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | `BINARY(16)` | `PRIMARY KEY`, `NOT NULL` | Unique identifier (UUID). |
+| `complaint_id` | `BINARY(16)` | `FOREIGN KEY`, `NOT NULL` | Reference to the associated Complaint. |
+| `author_id` | `BINARY(16)` | `FOREIGN KEY`, `NOT NULL` | Reference to the user (Citizen/Officer) who wrote it. |
+| `content` | `TEXT` | `NOT NULL` | Body of the message/update. |
+| `created_at` | `DATETIME(6)` | `NOT NULL` | Timestamp when comment was added. |
