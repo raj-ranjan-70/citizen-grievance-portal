@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import {
   FileText,
   Users,
@@ -347,12 +348,12 @@ export const AdminDashboardPage = () => {
                 <Label htmlFor="officerSelect" className="font-semibold text-neutral-800 text-xs">
                   Available Officers
                 </Label>
-                <select
+                <Select
                   id="officerSelect"
                   value={selectedOfficerId}
                   onChange={(e) => setSelectedOfficerId(e.target.value)}
                   required
-                  className="w-full p-2.5 rounded-lg border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm bg-white"
+                  error={!!assignError}
                 >
                   <option value="">-- Choose Officer --</option>
                   {officers.map((o) => (
@@ -360,7 +361,7 @@ export const AdminDashboardPage = () => {
                       {o.name} ({o.department})
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
 
               {assignError && (
@@ -457,19 +458,19 @@ export const AdminDashboardPage = () => {
                 <Label htmlFor="officerDept" className="font-semibold text-neutral-800 text-xs">
                   Department
                 </Label>
-                <select
+                <Select
                   id="officerDept"
                   value={officerForm.department}
                   onChange={(e) => setOfficerForm({ ...officerForm, department: e.target.value })}
                   required
-                  className="w-full p-2.5 rounded-lg border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm bg-white"
+                  error={!!createError}
                 >
                   <option value="WATER">Water Supply</option>
                   <option value="ELECTRICITY">Electricity</option>
                   <option value="ROADS">Roads & Infrastructure</option>
                   <option value="SANITATION">Sanitation</option>
                   <option value="NONE">None</option>
-                </select>
+                </Select>
               </div>
 
               {createError && (

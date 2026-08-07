@@ -4,6 +4,7 @@ import { complaintService } from "@/services/complaintService";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   FileText,
   Clock,
@@ -299,7 +300,7 @@ export const ComplaintDetailsPage = () => {
               <Label htmlFor="comment" className="font-semibold text-neutral-800 text-xs uppercase tracking-wider">
                 Post an Update
               </Label>
-              <textarea
+              <Textarea
                 id="comment"
                 rows={3}
                 value={newComment}
@@ -307,7 +308,7 @@ export const ComplaintDetailsPage = () => {
                 placeholder="Type your message or query here..."
                 required
                 disabled={commentLoading}
-                className="w-full p-3 rounded-lg border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all bg-white"
+                error={!!commentError}
               />
             </div>
             {commentError && (

@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { complaintService } from "@/services/complaintService";
-import { Container } from "@/components/ui/container";
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { AlertCircle, CheckCircle2, Loader2, ArrowLeft } from "lucide-react";
 
 const CATEGORIES = [
@@ -225,7 +227,7 @@ export const EditComplaintPage = () => {
                   Category
                 </Label>
                 <div className="relative">
-                  <select
+                  <Select
                     id="category"
                     value={category}
                     onChange={(e) => {
@@ -233,9 +235,7 @@ export const EditComplaintPage = () => {
                       if (errors.category) setErrors((prev) => ({ ...prev, category: null }));
                     }}
                     disabled={submitting || success || !isEditable}
-                    className={`flex h-10 w-full rounded-md border ${
-                      errors.category ? "border-error focus-visible:ring-error" : "border-input"
-                    } bg-background px-3 py-2 text-sm placeholder:text-neutral-400 focus-visible:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all cursor-pointer`}
+                    error={!!errors.category}
                   >
                     <option value="" disabled>Select a category</option>
                     {CATEGORIES.map((cat) => (
@@ -243,7 +243,7 @@ export const EditComplaintPage = () => {
                         {cat}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
                 {errors.category && (
                   <p className="text-xs text-error font-medium mt-1 flex items-center gap-1">
@@ -258,7 +258,7 @@ export const EditComplaintPage = () => {
                   Priority Level
                 </Label>
                 <div className="relative">
-                  <select
+                  <Select
                     id="priority"
                     value={priority}
                     onChange={(e) => {
@@ -266,9 +266,7 @@ export const EditComplaintPage = () => {
                       if (errors.priority) setErrors((prev) => ({ ...prev, priority: null }));
                     }}
                     disabled={submitting || success || !isEditable}
-                    className={`flex h-10 w-full rounded-md border ${
-                      errors.priority ? "border-error focus-visible:ring-error" : "border-input"
-                    } bg-background px-3 py-2 text-sm placeholder:text-neutral-400 focus-visible:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all cursor-pointer`}
+                    error={!!errors.priority}
                   >
                     <option value="" disabled>Select priority level</option>
                     {PRIORITIES.map((prio) => (
@@ -276,7 +274,7 @@ export const EditComplaintPage = () => {
                         {prio.label}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
                 {errors.priority && (
                   <p className="text-xs text-error font-medium mt-1 flex items-center gap-1">
@@ -291,7 +289,7 @@ export const EditComplaintPage = () => {
               <Label htmlFor="description" required>
                 Detailed Description
               </Label>
-              <textarea
+              <Textarea
                 id="description"
                 rows={6}
                 value={description}
@@ -301,9 +299,7 @@ export const EditComplaintPage = () => {
                 }}
                 placeholder="Provide a detailed description of the issue (minimum 20 characters)."
                 disabled={submitting || success || !isEditable}
-                className={`flex w-full rounded-md border ${
-                  errors.description ? "border-error focus-visible:ring-error" : "border-input"
-                } bg-background px-3 py-2 text-sm placeholder:text-neutral-400 focus-visible:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all`}
+                error={!!errors.description}
               />
               <div className="flex justify-between text-xs text-neutral-500 font-medium">
                 <span>Min 20 characters</span>
