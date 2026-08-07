@@ -231,8 +231,9 @@ export const MyComplaintsPage = () => {
                       variant={isEditable ? "outline" : "ghost"}
                       size="sm"
                       disabled={!isEditable}
-                      className={`flex items-center justify-center gap-1.5 text-xs h-9 cursor-pointer ${
-                        !isEditable ? "opacity-40 cursor-not-allowed hover:bg-transparent text-neutral-400" : ""
+                      title={!isEditable ? "This action cannot be performed" : undefined}
+                      className={`flex items-center justify-center gap-1.5 text-xs h-9 ${
+                        !isEditable ? "opacity-40 cursor-not-allowed hover:bg-transparent text-neutral-400" : "cursor-pointer"
                       }`}
                     >
                       <Edit2 className="size-3.5" />
@@ -241,9 +242,15 @@ export const MyComplaintsPage = () => {
 
                     <Button
                       onClick={() => setDeleteId(complaint.id)}
-                      variant="outline"
+                      variant={isEditable ? "outline" : "ghost"}
                       size="sm"
-                      className="flex items-center justify-center gap-1.5 text-xs h-9 text-error border-error/25 hover:bg-error/5 hover:text-error cursor-pointer"
+                      disabled={!isEditable}
+                      title={!isEditable ? "This action cannot be performed" : undefined}
+                      className={`flex items-center justify-center gap-1.5 text-xs h-9 ${
+                        !isEditable
+                          ? "opacity-40 cursor-not-allowed hover:bg-transparent text-neutral-400"
+                          : "text-error border-error/25 hover:bg-error/5 hover:text-error cursor-pointer"
+                      }`}
                     >
                       <Trash2 className="size-3.5" />
                       Delete

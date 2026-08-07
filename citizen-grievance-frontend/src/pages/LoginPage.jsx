@@ -99,8 +99,15 @@ export const LoginPage = () => {
     setSubmitting(true);
     try {
       // Calls AuthContext login
-      await login({ email, password });
-      navigate("/dashboard");
+      const loggedUser = await login({ email, password });
+      const role = loggedUser?.role?.toLowerCase();
+      if (role === "admin") {
+        navigate("/admin/dashboard");
+      } else if (role === "officer") {
+        navigate("/officer/dashboard");
+      } else {
+        navigate("/citizen/dashboard");
+      }
     } catch (err) {
       const message = err.response?.data?.message || "Invalid email or password.";
       setGlobalError(message);

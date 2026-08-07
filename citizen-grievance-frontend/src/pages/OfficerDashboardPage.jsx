@@ -132,54 +132,44 @@ export const OfficerDashboardPage = () => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-[calc(100vh-64px)] bg-neutral-50 font-sans">
-      {/* Sidebar Navigation */}
-      <aside className="w-full md:w-64 bg-white border-r border-neutral-200 shrink-0">
-        <div className="p-6 border-b border-neutral-100 flex items-center gap-3">
-          <div className="size-8 rounded-lg bg-primary flex items-center justify-center text-white">
-            <Building className="size-4" />
-          </div>
-          <div>
-            <h1 className="text-sm font-bold text-neutral-900 leading-tight">Officer Dashboard</h1>
-            <p className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Resolver Portal</p>
-          </div>
-        </div>
-
-        <nav className="p-4 space-y-1.5" aria-label="Officer Navigation">
+  return (
+    <div className="min-h-[calc(100vh-64px)] bg-neutral-50 font-sans p-4 sm:p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Horizontal Navigation Tabs */}
+        <div className="flex border-b border-neutral-200 bg-white p-2 rounded-lg shadow-sm gap-2">
           <button
             onClick={() => setActiveTab("active")}
-            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-bold transition-all cursor-pointer ${
               activeTab === "active"
                 ? "bg-primary/10 text-primary"
-                : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-950"
+                : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
             }`}
           >
             <Clock className="size-4" />
             <span>Active Assignments</span>
-            <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-bold bg-neutral-100 text-neutral-600">
+            <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-neutral-100 text-neutral-600">
               {activeComplaints.length}
             </span>
           </button>
 
           <button
             onClick={() => setActiveTab("history")}
-            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-bold transition-all cursor-pointer ${
               activeTab === "history"
                 ? "bg-primary/10 text-primary"
-                : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-950"
+                : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
             }`}
           >
             <History className="size-4" />
             <span>Processed History</span>
-            <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-bold bg-neutral-100 text-neutral-600">
+            <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-neutral-100 text-neutral-600">
               {historyComplaints.length}
             </span>
           </button>
-        </nav>
-      </aside>
+        </div>
 
-      {/* Main Content */}
-      <main className="flex-grow p-4 sm:p-8 max-w-7xl mx-auto w-full space-y-6">
+        {/* Main Content */}
+        <div className="space-y-6">
         {loading && (
           <div className="flex flex-col items-center justify-center py-24 space-y-4">
             <Loader2 className="size-8 animate-spin text-primary" />
@@ -337,7 +327,8 @@ export const OfficerDashboardPage = () => {
             </Card>
           </div>
         )}
-      </main>
+      </div>
+    </div>
 
       {/* Complaint Review / Details Modal */}
       {selectedComplaint && (

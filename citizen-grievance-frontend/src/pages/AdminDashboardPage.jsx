@@ -137,50 +137,37 @@ export const AdminDashboardPage = () => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-[calc(100vh-64px)] bg-neutral-50 font-sans">
-      {/* Sidebar Navigation */}
-      <aside className="w-full md:w-64 bg-white border-r border-neutral-200 shrink-0">
-        <div className="p-6 border-b border-neutral-100 flex items-center gap-3">
-          <div className="size-8 rounded-lg bg-neutral-900 flex items-center justify-center text-white">
-            <Shield className="size-4" />
-          </div>
-          <div>
-            <h1 className="text-sm font-bold text-neutral-900 leading-tight">Admin Console</h1>
-            <p className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Control Panel</p>
-          </div>
-        </div>
-
-        <nav className="p-4 space-y-1.5" aria-label="Admin Navigation">
+    <div className="min-h-[calc(100vh-64px)] bg-neutral-50 font-sans p-4 sm:p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Horizontal Navigation Tabs */}
+        <div className="flex border-b border-neutral-200 bg-white p-2 rounded-lg shadow-sm gap-2">
           <button
             onClick={() => setActiveTab("complaints")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-bold transition-all cursor-pointer ${
               activeTab === "complaints"
                 ? "bg-primary/10 text-primary"
-                : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-950"
+                : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
             }`}
           >
             <FileText className="size-4" />
             <span>Manage Complaints</span>
-            {activeTab === "complaints" && <ChevronRight className="size-4 ml-auto" />}
           </button>
 
           <button
             onClick={() => setActiveTab("officers")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-bold transition-all cursor-pointer ${
               activeTab === "officers"
                 ? "bg-primary/10 text-primary"
-                : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-950"
+                : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
             }`}
           >
             <Users className="size-4" />
             <span>Manage Officers</span>
-            {activeTab === "officers" && <ChevronRight className="size-4 ml-auto" />}
           </button>
-        </nav>
-      </aside>
+        </div>
 
-      {/* Main Content Area */}
-      <main className="flex-grow p-4 sm:p-8 max-w-7xl mx-auto w-full space-y-6">
+        {/* Main Content Area */}
+        <div className="space-y-6">
         {/* Loading Spinner */}
         {loading && (
           <div className="flex flex-col items-center justify-center py-24 space-y-4">
@@ -341,7 +328,8 @@ export const AdminDashboardPage = () => {
             </Card>
           </div>
         )}
-      </main>
+      </div>
+    </div>
 
       {/* Officer Assignment Modal */}
       {selectedComplaint && (

@@ -52,7 +52,9 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       const loggedUser = await authService.login(credentials);
-      setUser(loggedUser?.data || null);
+      const data = loggedUser?.data || null;
+      setUser(data);
+      return data;
     } catch (error) {
       setUser(null);
       throw error;
@@ -62,7 +64,9 @@ export const AuthProvider = ({ children }) => {
   const signup = async (userData) => {
     try {
       const registeredUser = await authService.signup(userData);
-      setUser(registeredUser?.data || null);
+      const data = registeredUser?.data || null;
+      setUser(data);
+      return data;
     } catch (error) {
       setUser(null);
       throw error;

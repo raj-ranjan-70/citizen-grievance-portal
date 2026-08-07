@@ -104,8 +104,15 @@ export const LandingPage = () => {
                 track resolved parameters in real-time, and collaborate with assigned officers.
                 Together, let's create a better public space.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-2">
-                <Button variant="primary" size="lg" as={Link} to={user ? "/dashboard" : "/login"}>
+                <Button variant="primary" size="lg" as={Link} to={
+                  user
+                    ? (user.role?.toLowerCase() === "admin"
+                        ? "/admin/dashboard"
+                        : (user.role?.toLowerCase() === "officer"
+                            ? "/officer/dashboard"
+                            : "/citizen/dashboard"))
+                    : "/login"
+                }>
                   Report a Grievance
                   <ArrowRight className="size-5 ml-1" aria-hidden="true" />
                 </Button>

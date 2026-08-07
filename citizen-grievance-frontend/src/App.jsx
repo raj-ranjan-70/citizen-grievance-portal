@@ -54,7 +54,7 @@ function App() {
               </ProtectedRoute>
             }
           >
-            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/citizen/dashboard" element={<DashboardPage />} />
             <Route path="/complaints" element={<MyComplaintsPage />} />
             <Route path="/complaints/new" element={<CreateComplaintPage />} />
             <Route path="/complaints/:id" element={<ComplaintDetailsPage />} />

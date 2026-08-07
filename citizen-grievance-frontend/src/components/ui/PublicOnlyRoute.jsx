@@ -23,7 +23,11 @@ export const PublicOnlyRoute = ({ children }) => {
   }
 
   if (user) {
-    const from = location.state?.from?.pathname || "/dashboard";
+    const role = user.role?.toLowerCase();
+    const defaultDashboard = role === "admin"
+      ? "/admin/dashboard"
+      : (role === "officer" ? "/officer/dashboard" : "/citizen/dashboard");
+    const from = location.state?.from?.pathname || defaultDashboard;
     return <Navigate to={from} replace />;
   }
 

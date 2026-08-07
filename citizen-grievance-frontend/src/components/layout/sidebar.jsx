@@ -29,7 +29,7 @@ export const Sidebar = React.forwardRef(({
   const location = useLocation();
 
   const citizenLinks = [
-    { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
+    { name: "Dashboard", icon: LayoutDashboard, path: "/citizen/dashboard" },
     { name: "My Complaints", icon: FileText, path: "/complaints" },
     { name: "New Complaint", icon: PlusCircle, path: "/complaints/new" },
   ];
@@ -71,7 +71,7 @@ export const Sidebar = React.forwardRef(({
           const isActive = activeItem
             ? item.name === activeItem
             : location.pathname === item.path ||
-              (item.path !== "/dashboard" && location.pathname.startsWith(item.path));
+              (!item.path.endsWith("/dashboard") && location.pathname.startsWith(item.path));
 
           return (
             <Link
