@@ -38,4 +38,9 @@
 - **Decision:** Validate the user role as `OFFICER` and enforce complaint ownership matching (`complaint.assignedOfficer.id === officerId`) inside `OfficerService.java` before allowing status updates or viewing active lists.
 - **Rationale:** Secures complaint life-cycle transactions so that municipal officers can only query and process complaints assigned to them, preventing unauthorized data tampering.
 
+## 10. Database Separation for Development vs Testing
+- **Decision:** Set `spring.jpa.hibernate.ddl-auto=update` in the development `application.properties` and introduce a dedicated test configuration file in `src/test/resources/application.properties` pointing to a separate `citizen_grievance_test_db` database using `ddl-auto=create-drop`.
+- **Rationale:** Prevents server restarts from dropping development database tables, and ensures integration test runs (which call database purging/deletions) do not wipe out development user accounts and filed complaints.
+
+
 
