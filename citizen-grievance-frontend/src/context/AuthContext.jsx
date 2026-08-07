@@ -50,40 +50,32 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (credentials) => {
-    setLoading(true);
     try {
       const loggedUser = await authService.login(credentials);
       setUser(loggedUser?.data || null);
     } catch (error) {
       setUser(null);
       throw error;
-    } finally {
-      setLoading(false);
     }
   };
 
   const signup = async (userData) => {
-    setLoading(true);
     try {
       const registeredUser = await authService.signup(userData);
       setUser(registeredUser?.data || null);
     } catch (error) {
       setUser(null);
       throw error;
-    } finally {
-      setLoading(false);
     }
   };
 
   const logout = async () => {
-    setLoading(true);
     try {
       await authService.logout();
     } catch (error) {
       console.error("Failed to execute logout on server", error);
     } finally {
       setUser(null);
-      setLoading(false);
     }
   };
 
