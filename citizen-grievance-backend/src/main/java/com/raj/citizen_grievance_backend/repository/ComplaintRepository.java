@@ -12,4 +12,5 @@ import java.util.UUID;
 public interface ComplaintRepository extends JpaRepository<Complaint, UUID> {
     List<Complaint> findByCitizenIdOrderByCreatedAtDesc(UUID citizenId);
     Optional<Complaint> findByIdAndCitizenId(UUID id, UUID citizenId);
+    List<Complaint> findAllByOrderByCreatedAtDesc();
 }
