@@ -5,10 +5,7 @@ import {
   ChevronRight,
   LayoutDashboard,
   FileText,
-  Settings,
-  Users,
   ShieldCheck,
-  HelpCircle,
   PlusCircle,
 } from "lucide-react";
 import { Button } from "../ui/button";
@@ -54,7 +51,7 @@ export const Sidebar = React.forwardRef(({
     <aside
       ref={ref}
       className={cn(
-        "hidden md:flex flex-col border-r border-neutral-200 bg-background transition-all duration-300 h-[calc(100vh-4rem)] sticky top-16 shrink-0 z-40",
+        "hidden md:flex flex-col border-r border-neutral-200 bg-background transition-[width] duration-300 h-[calc(100vh-4rem)] sticky top-16 shrink-0 z-40",
         collapsed ? "w-16" : "w-64",
         className
       )}
