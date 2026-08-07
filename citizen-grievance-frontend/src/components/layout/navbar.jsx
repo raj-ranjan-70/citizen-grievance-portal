@@ -137,21 +137,69 @@ export const Navbar = React.forwardRef(({
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-neutral-200 bg-background px-4 py-4">
           <nav className="flex flex-col gap-3" aria-label="Mobile Navigation">
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                className={cn(
-                  "block py-2 px-3 rounded-md text-base font-medium transition-colors",
-                  link.name === activeLink
-                    ? "bg-primary/10 text-primary"
-                    : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
+            {user ? (
+              <>
+                {user.role?.toUpperCase() === "ADMIN" && (
+                  <Link
+                    to="/admin/dashboard"
+                    className="block py-2 px-3 rounded-md text-base font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Admin Dashboard
+                  </Link>
                 )}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {link.name}
-              </a>
-            ))}
+                {user.role?.toUpperCase() === "OFFICER" && (
+                  <Link
+                    to="/officer/dashboard"
+                    className="block py-2 px-3 rounded-md text-base font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Officer Dashboard
+                  </Link>
+                )}
+                {user.role?.toUpperCase() === "CITIZEN" && (
+                  <>
+                    <Link
+                      to="/citizen/dashboard"
+                      className="block py-2 px-3 rounded-md text-base font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Dashboard
+                    </Link>
+                    <Link
+                      to="/complaints"
+                      className="block py-2 px-3 rounded-md text-base font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      My Complaints
+                    </Link>
+                    <Link
+                      to="/complaints/new"
+                      className="block py-2 px-3 rounded-md text-base font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      New Complaint
+                    </Link>
+                  </>
+                )}
+              </>
+            ) : (
+              navLinks.map((link) => (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  className={cn(
+                    "block py-2 px-3 rounded-md text-base font-medium transition-colors",
+                    link.name === activeLink
+                      ? "bg-primary/10 text-primary"
+                      : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
+                  )}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {link.name}
+                </a>
+              ))
+            )}
             {!user ? (
               <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-neutral-200">
                 <Button variant="outline" as={Link} to="/login" onClick={() => setMobileMenuOpen(false)} className="w-full">
