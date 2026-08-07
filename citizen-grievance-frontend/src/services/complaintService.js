@@ -20,33 +20,33 @@ const mapComplaintStatus = (complaint) => {
  */
 export const complaintService = {
   createComplaint: async (data) => {
-    const response = await api.post("/complaints", data);
+    const response = await api.post("/v1/complaints", data);
     return mapComplaintStatus(response.data.data);
   },
 
   getComplaints: async () => {
-    const response = await api.get("/complaints");
+    const response = await api.get("/v1/complaints");
     const list = response.data.data || [];
     return list.map(mapComplaintStatus);
   },
 
   getComplaint: async (id) => {
-    const response = await api.get(`/complaints/${id}`);
+    const response = await api.get(`/v1/complaints/${id}`);
     return mapComplaintStatus(response.data.data);
   },
 
   updateComplaint: async (id, data) => {
-    const response = await api.put(`/complaints/${id}`, data);
+    const response = await api.put(`/v1/complaints/${id}`, data);
     return mapComplaintStatus(response.data.data);
   },
 
   deleteComplaint: async (id) => {
-    const response = await api.delete(`/complaints/${id}`);
+    const response = await api.delete(`/v1/complaints/${id}`);
     return response.data.data;
   },
 
   addComment: async (id, commentData) => {
-    const response = await api.post(`/complaints/${id}/comments`, commentData);
+    const response = await api.post(`/v1/complaints/${id}/comments`, commentData);
     return response.data.data;
   }
 };
