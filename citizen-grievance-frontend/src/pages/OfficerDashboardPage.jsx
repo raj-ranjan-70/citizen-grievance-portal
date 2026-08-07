@@ -132,7 +132,6 @@ export const OfficerDashboardPage = () => {
   };
 
   return (
-  return (
     <div className="min-h-[calc(100vh-64px)] bg-neutral-50 font-sans p-4 sm:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Horizontal Navigation Tabs */}
