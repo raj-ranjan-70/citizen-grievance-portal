@@ -25,3 +25,12 @@
 ## 6. Auth Context Response Unwrapping
 - **Decision:** Unwrap `response.data` within `AuthContext.jsx` when handling login, registration, and session load.
 - **Rationale:** Since all backend responses are wrapped in `ApiResponse<T>` envelopes, unwrapping the response data in the context ensures `{user.name}` and `{user.role}` properties accessed by layout components resolve correctly.
+
+## 7. Startup Administrative Seeding
+- **Decision:** Implement `DatabaseSeeder` utilizing Spring's `CommandLineRunner` to seed a default Administrator account if not present.
+- **Rationale:** Ensures that a default admin account (`admin@citizen.com` / `password`) is available immediately on startup for testing and system administration.
+
+## 8. Service-Layer Administrative Authorization Check
+- **Decision:** Validate the user role of the request initiator as `ADMIN` inside the service layer (`AdminService.java`) instead of relying solely on controller-level annotations.
+- **Rationale:** Preserves proper separation of concerns (keeping authorization rules inside the business logic layer) and makes security checks testable inside integration tests.
+
