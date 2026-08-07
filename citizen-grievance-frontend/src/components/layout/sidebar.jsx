@@ -42,17 +42,14 @@ export const Sidebar = React.forwardRef(({
   ];
 
   const adminLinks = [
-    { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-    { name: "All Grievances", icon: FileText, badge: "45", path: "/dashboard" },
-    { name: "User Management", icon: Users, path: "/dashboard" },
-    { name: "System Logs", icon: ShieldCheck, path: "/dashboard" },
-    { name: "Settings", icon: Settings, path: "/dashboard" },
+    { name: "Admin Dashboard", icon: ShieldCheck, path: "/admin/dashboard" },
   ];
 
+  const normalizedRole = role?.toLowerCase();
   let menuItems = citizenLinks;
-  if (role === "admin") {
+  if (normalizedRole === "admin") {
     menuItems = adminLinks;
-  } else if (role === "officer") {
+  } else if (normalizedRole === "officer") {
     menuItems = officerLinks;
   }
 
