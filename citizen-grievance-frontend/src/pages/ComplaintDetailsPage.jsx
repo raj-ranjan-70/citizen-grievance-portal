@@ -13,7 +13,6 @@ import {
   Loader2,
   Calendar,
   AlertCircle,
-  ShieldCheck,
   Edit2
 } from "lucide-react";
 
@@ -24,6 +23,11 @@ export const ComplaintDetailsPage = () => {
   const [complaint, setComplaint] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Comment submission states
+  const [newComment, setNewComment] = useState("");
+  const [commentLoading, setCommentLoading] = useState(false);
+  const [commentError, setCommentError] = useState("");
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -39,6 +43,28 @@ export const ComplaintDetailsPage = () => {
     };
     fetchDetails();
   }, [id]);
+
+  const handleCommentSubmit = async (e) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+
+    setCommentLoading(true);
+    setCommentError("");
+    try {
+      const postedComment = await complaintService.addComment(id, {
+        content: newComment.trim()
+      });
+      setComplaint((prev) => ({
+        ...prev,
+        comments: [...(prev.comments || []), postedComment]
+      }));
+      setNewComment("");
+    } catch (err) {
+      setCommentError(err.response?.data?.message || "Failed to post comment. Please try again.");
+    } finally {
+      setCommentLoading(false);
+    }
+  };
 
   // Badges styles helpers
   const getPriorityStyle = (priority) => {
@@ -215,6 +241,92 @@ export const ComplaintDetailsPage = () => {
               {complaint.description}
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Discussion & Comments Section */}
+      <Card className="border border-neutral-200 shadow-md bg-white rounded-lg overflow-hidden">
+        <CardHeader className="pb-3 border-b border-neutral-100 bg-neutral-50/50">
+          <CardTitle className="text-lg font-bold text-neutral-900">Discussion & Comments</CardTitle>
+          <CardDescription className="text-xs text-neutral-500">
+            Official communications, updates, and comments thread.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-6 space-y-6">
+          {/* Comments List */}
+          <div className="space-y-4">
+            {(!complaint.comments || complaint.comments.length === 0) ? (
+              <div className="text-center py-6 text-neutral-400 text-sm border border-dashed border-neutral-200 rounded-lg">
+                No comments or updates yet on this grievance.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {complaint.comments.map((comment) => {
+                  const isOfficer = comment.authorRole === "OFFICER" || comment.authorRole === "ADMIN";
+                  return (
+                    <div
+                      key={comment.id}
+                      className={`flex flex-col p-4 rounded-lg border text-sm max-w-[85%] ${
+                        isOfficer
+                          ? "bg-primary/5 border-primary/20 mr-auto text-neutral-800"
+                          : "bg-neutral-50 border-neutral-200 ml-auto text-neutral-800"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-4 mb-1.5">
+                        <span className="font-bold text-xs text-neutral-900 flex items-center gap-1.5">
+                          {comment.authorName}
+                          {isOfficer && (
+                            <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20 uppercase font-semibold">
+                              Officer
+                            </span>
+                          )}
+                        </span>
+                        <span className="text-[10px] text-neutral-500 font-medium">
+                          {formatDate(comment.createdAt)}
+                        </span>
+                      </div>
+                      <p className="whitespace-pre-wrap leading-relaxed">{comment.content}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Add Comment Form */}
+          <form onSubmit={handleCommentSubmit} className="pt-4 border-t border-neutral-100 space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="comment" className="font-semibold text-neutral-800 text-xs uppercase tracking-wider">
+                Post an Update
+              </Label>
+              <textarea
+                id="comment"
+                rows={3}
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Type your message or query here..."
+                required
+                disabled={commentLoading}
+                className="w-full p-3 rounded-lg border border-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-all bg-white"
+              />
+            </div>
+            {commentError && (
+              <div className="text-xs text-error font-medium flex items-center gap-1"><AlertCircle className="size-3.5" />{commentError}</div>
+            )}
+            <Button
+              type="submit"
+              variant="primary"
+              size="sm"
+              disabled={commentLoading || !newComment.trim()}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              {commentLoading ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                "Post Comment"
+              )}
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </div>

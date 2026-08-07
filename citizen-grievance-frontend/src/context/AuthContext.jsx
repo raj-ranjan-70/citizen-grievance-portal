@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
     const initAuth = async () => {
       try {
         const currentUser = await authService.getCurrentUser();
-        setUser(currentUser);
+        setUser(currentUser?.data || null);
       } catch {
         // Safe to ignore on mount, user is unauthenticated or cookie is expired
         setUser(null);
@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const loggedUser = await authService.login(credentials);
-      setUser(loggedUser);
+      setUser(loggedUser?.data || null);
     } catch (error) {
       setUser(null);
       throw error;
@@ -66,7 +66,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const registeredUser = await authService.signup(userData);
-      setUser(registeredUser);
+      setUser(registeredUser?.data || null);
     } catch (error) {
       setUser(null);
       throw error;
