@@ -45,8 +45,9 @@ export const complaintService = {
     return response.data.data;
   },
 
-  addComment: async (id, commentData) => {
-    const response = await api.post(`/v1/citizen/complaints/${id}/comments`, commentData);
+  addComment: async (id, commentData, role = "CITIZEN") => {
+    const prefix = role?.toUpperCase() === "OFFICER" ? "officer" : "citizen";
+    const response = await api.post(`/v1/${prefix}/complaints/${id}/comments`, commentData);
     return response.data.data;
   },
 

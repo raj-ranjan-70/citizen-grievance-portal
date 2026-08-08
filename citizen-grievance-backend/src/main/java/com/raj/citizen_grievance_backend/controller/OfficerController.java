@@ -1,6 +1,8 @@
 package com.raj.citizen_grievance_backend.controller;
 
 import com.raj.citizen_grievance_backend.dto.ApiResponse;
+import com.raj.citizen_grievance_backend.dto.CommentRequest;
+import com.raj.citizen_grievance_backend.dto.CommentResponse;
 import com.raj.citizen_grievance_backend.dto.ComplaintResponse;
 import com.raj.citizen_grievance_backend.dto.RejectComplaintRequest;
 import com.raj.citizen_grievance_backend.dto.UpdateComplaintStatusRequest;
@@ -179,5 +181,35 @@ public class OfficerController {
                 .data(response)
                 .build();
         return ResponseEntity.ok(apiResponse);
+    }
+
+    @PostMapping("/complaints/{id}/comments")
+    @Operation(summary = "Add a comment to an assigned complaint", description = "Allows the assigned officer to add a comment to their assigned complaint")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Comment added successfully",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid comment request body",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Not authenticated",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Access denied: complaint is not assigned to you",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Complaint not found",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+    })
+    public ResponseEntity<ApiResponse<CommentResponse>> addComment(
+            @PathVariable UUID id,
+            @Valid @RequestBody CommentRequest request,
+            HttpServletRequest servletRequest) {
+
+        UUID officerId = getAuthenticatedUserId(servletRequest);
+        CommentResponse response = officerService.addComment(id, request, officerId);
+
+        ApiResponse<CommentResponse> apiResponse = ApiResponse.<CommentResponse>builder()
+                .success(true)
+                .message("Comment added successfully")
+                .data(response)
+                .build();
+        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).body(apiResponse);
     }
 }

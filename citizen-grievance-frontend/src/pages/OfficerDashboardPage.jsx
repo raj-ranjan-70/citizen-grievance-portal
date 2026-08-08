@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { officerService } from "@/services/officerService";
 import { complaintService } from "@/services/complaintService";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,8 +18,9 @@ import {
 
 export const OfficerDashboardPage = () => {
   const [activeTab, setActiveTab] = useState("active");
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const deepLinkComplaintId = searchParams.get("complaintId");
+  const { user } = useAuth();
 
   // Data states
   const [activeComplaints, setActiveComplaints] = useState([]);
@@ -57,9 +59,15 @@ export const OfficerDashboardPage = () => {
     fetchData();
   }, []);
 
-  // Deep-link: auto-open complaint from notification click (?complaintId=...)
+  // Deep-link: auto-open/close complaint from notification click (?complaintId=...)
   useEffect(() => {
-    if (!deepLinkComplaintId || activeComplaints.length === 0) return;
+    if (!deepLinkComplaintId) {
+      // If parameter is cleared, close view/modal states
+      setSelectedComplaint(null);
+      setActiveModal(null);
+      return;
+    }
+    if (activeComplaints.length === 0) return;
     const found = activeComplaints.find((c) => c.id === deepLinkComplaintId)
       || historyComplaints.find((c) => c.id === deepLinkComplaintId);
     if (found) {
@@ -80,7 +88,7 @@ export const OfficerDashboardPage = () => {
     try {
       const savedComment = await complaintService.addComment(selectedComplaint.id, {
         content: newComment.trim()
-      });
+      }, user?.role);
 
       // Update local state for comments in the selected complaint
       const updatedComplaint = {
@@ -111,6 +119,7 @@ export const OfficerDashboardPage = () => {
     setResolutionFile(null);
     setRemarks("");
     setModalError("");
+    setSearchParams({});
   };
 
   const handleResolveSubmit = async (e) => {
