@@ -31,6 +31,17 @@ export const officerService = {
     // Note: status from UI could be RESOLVED or REJECTED
     const response = await api.put(`/v1/officer/complaints/${complaintId}/status`, { status });
     return mapComplaintStatus(response.data.data);
+  },
+
+  resolveComplaint: async (complaintId, file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await api.post(`/v1/officer/complaints/${complaintId}/resolve`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data"
+      }
+    });
+    return mapComplaintStatus(response.data.data);
   }
 };
 

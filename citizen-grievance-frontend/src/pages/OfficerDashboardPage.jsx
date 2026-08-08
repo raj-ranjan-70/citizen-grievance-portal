@@ -1,24 +1,18 @@
 import { useState, useEffect } from "react";
 import { officerService } from "@/services/officerService";
 import { complaintService } from "@/services/complaintService";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   FileText,
   History,
   CheckCircle2,
-  XCircle,
   Clock,
-  Building,
-  UserCheck,
   AlertCircle,
   Loader2,
   Send,
-  Eye,
-  MessageSquare,
-  ChevronRight
+  MessageSquare
 } from "lucide-react";
 
 export const OfficerDashboardPage = () => {
@@ -89,6 +83,36 @@ export const OfficerDashboardPage = () => {
       setModalError(err.response?.data?.message || "Failed to post comment. Please try again.");
     } finally {
       setCommentLoading(false);
+    }
+  };
+
+  const [resolutionFile, setResolutionFile] = useState(null);
+  const [showResolveForm, setShowResolveForm] = useState(false);
+
+  const handleCloseModal = () => {
+    setSelectedComplaint(null);
+    setResolutionFile(null);
+    setShowResolveForm(false);
+    setModalError("");
+  };
+
+  const handleResolveSubmit = async () => {
+    if (!selectedComplaint || !resolutionFile) return;
+
+    setStatusLoading(true);
+    setModalError("");
+    try {
+      const updated = await officerService.resolveComplaint(selectedComplaint.id, resolutionFile);
+      setActiveComplaints((prev) => prev.filter((c) => c.id !== selectedComplaint.id));
+      setHistoryComplaints((prev) => {
+        if (prev.some((c) => c.id === updated.id)) return prev;
+        return [updated, ...prev];
+      });
+      handleCloseModal();
+    } catch (err) {
+      setModalError(err.response?.data?.message || "Failed to resolve complaint.");
+    } finally {
+      setStatusLoading(false);
     }
   };
 
@@ -345,7 +369,7 @@ export const OfficerDashboardPage = () => {
                 </p>
               </div>
               <button
-                onClick={() => setSelectedComplaint(null)}
+                onClick={handleCloseModal}
                 className="text-neutral-400 hover:text-neutral-600 focus:outline-none focus:ring-2 focus:ring-primary rounded p-1 cursor-pointer"
               >
                 ✕
@@ -361,6 +385,53 @@ export const OfficerDashboardPage = () => {
                   {selectedComplaint.description}
                 </div>
               </div>
+
+              {/* Citizen Attachments (If any) */}
+              {selectedComplaint.imageUuids && selectedComplaint.imageUuids.length > 0 && (
+                <div className="space-y-1.5">
+                  <h4 className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Attachments ({selectedComplaint.imageUuids.length})</h4>
+                  <div className="grid grid-cols-3 gap-2">
+                    {selectedComplaint.imageUuids.map((uuid) => (
+                      <a
+                        key={uuid}
+                        href={`${import.meta.env.VITE_R2_PUBLIC_URL}/${uuid}.webp`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block aspect-video rounded-md overflow-hidden border border-neutral-200 bg-neutral-50 hover:opacity-85 transition-opacity"
+                      >
+                        <img
+                          src={`${import.meta.env.VITE_R2_PUBLIC_URL}/${uuid}.webp`}
+                          alt="Attachment"
+                          className="size-full object-cover"
+                        />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Resolution Image (If RESOLVED) */}
+              {selectedComplaint.status === "RESOLVED" && selectedComplaint.resolutionImageUuid && (
+                <div className="space-y-1.5">
+                  <h4 className="text-xs font-bold text-success uppercase tracking-wider flex items-center gap-1.5">
+                    <CheckCircle2 className="size-4 shrink-0 text-success" /> Proof of Resolution
+                  </h4>
+                  <div className="max-w-xs aspect-video rounded-md overflow-hidden border border-success/20 bg-success/5 p-1">
+                    <a
+                      href={`${import.meta.env.VITE_R2_PUBLIC_URL}/${selectedComplaint.resolutionImageUuid}.webp`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block size-full rounded overflow-hidden"
+                    >
+                      <img
+                        src={`${import.meta.env.VITE_R2_PUBLIC_URL}/${selectedComplaint.resolutionImageUuid}.webp`}
+                        alt="Proof of resolution"
+                        className="size-full object-cover"
+                      />
+                    </a>
+                  </div>
+                </div>
+              )}
 
               {/* Discussion Timeline */}
               <div className="space-y-4">
@@ -425,6 +496,35 @@ export const OfficerDashboardPage = () => {
                 )}
               </div>
 
+              {showResolveForm && (
+                <div className="p-4 bg-success/5 border border-success/20 rounded-lg space-y-3 animate-fadeIn">
+                  <h5 className="text-xs font-bold text-success uppercase tracking-wider flex items-center gap-1.5">
+                    <FileText className="size-4 text-success" /> Upload Proof of Resolution
+                  </h5>
+                  <p className="text-xs text-neutral-600">
+                    Please upload an image showing the resolved issue. This proof will be shared with the citizen.
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setResolutionFile(e.target.files[0]);
+                          setModalError("");
+                        }
+                      }}
+                      className="text-xs text-neutral-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-success/10 file:text-success hover:file:bg-success/20 cursor-pointer"
+                    />
+                    {resolutionFile && (
+                      <span className="text-xs font-semibold text-neutral-700">
+                        Selected: {resolutionFile.name} ({(resolutionFile.size / 1024 / 1024).toFixed(2)} MB)
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {modalError && (
                 <div className="text-xs text-error font-medium flex items-center gap-1">
                   <AlertCircle className="size-3.5" />
@@ -438,7 +538,7 @@ export const OfficerDashboardPage = () => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setSelectedComplaint(null)}
+                onClick={handleCloseModal}
                 disabled={statusLoading}
               >
                 Close
@@ -446,24 +546,51 @@ export const OfficerDashboardPage = () => {
 
               {selectedComplaint.status === "IN_PROGRESS" && (
                 <>
-                  <Button
-                    type="button"
-                    onClick={() => handleStatusChange("REJECTED")}
-                    variant="outline"
-                    disabled={statusLoading}
-                    className="text-error border-error/30 hover:bg-error/5 cursor-pointer"
-                  >
-                    {statusLoading ? <Loader2 className="size-4 animate-spin" /> : "Reject Grievance"}
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={() => handleStatusChange("RESOLVED")}
-                    variant="primary"
-                    disabled={statusLoading}
-                    className="bg-success text-white hover:bg-success/90 border-transparent cursor-pointer"
-                  >
-                    {statusLoading ? <Loader2 className="size-4 animate-spin" /> : "Resolve Grievance"}
-                  </Button>
+                  {showResolveForm ? (
+                    <>
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          setShowResolveForm(false);
+                          setResolutionFile(null);
+                        }}
+                        variant="outline"
+                        disabled={statusLoading}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={handleResolveSubmit}
+                        variant="primary"
+                        disabled={statusLoading || !resolutionFile}
+                        className="bg-success text-white hover:bg-success/90 border-transparent cursor-pointer"
+                      >
+                        {statusLoading ? <Loader2 className="size-4 animate-spin" /> : "Submit Resolution"}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        type="button"
+                        onClick={() => handleStatusChange("REJECTED")}
+                        variant="outline"
+                        disabled={statusLoading}
+                        className="text-error border-error/30 hover:bg-error/5 cursor-pointer"
+                      >
+                        {statusLoading ? <Loader2 className="size-4 animate-spin" /> : "Reject Grievance"}
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => setShowResolveForm(true)}
+                        variant="primary"
+                        disabled={statusLoading}
+                        className="bg-success text-white hover:bg-success/90 border-transparent cursor-pointer"
+                      >
+                        Resolve Grievance
+                      </Button>
+                    </>
+                  )}
                 </>
               )}
             </div>

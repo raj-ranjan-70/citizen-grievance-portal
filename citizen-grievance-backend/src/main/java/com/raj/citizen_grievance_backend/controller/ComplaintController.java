@@ -196,4 +196,34 @@ public class ComplaintController {
                 .build();
         return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
     }
+
+    @PostMapping(value = "/{id}/images", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Upload an image for a specific complaint", description = "Allows an authenticated citizen to upload an image attachment for their grievance")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Image uploaded successfully",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid file or error during processing",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Not authenticated",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Access denied: complaint belongs to another user",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Complaint not found",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+    })
+    public ResponseEntity<ApiResponse<ComplaintResponse>> uploadComplaintImage(
+            @PathVariable UUID id,
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            HttpServletRequest servletRequest) {
+
+        UUID citizenId = getAuthenticatedUserId(servletRequest);
+        ComplaintResponse response = complaintService.uploadComplaintImage(id, file, citizenId);
+
+        ApiResponse<ComplaintResponse> apiResponse = ApiResponse.<ComplaintResponse>builder()
+                .success(true)
+                .message("Image uploaded successfully")
+                .data(response)
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
 }

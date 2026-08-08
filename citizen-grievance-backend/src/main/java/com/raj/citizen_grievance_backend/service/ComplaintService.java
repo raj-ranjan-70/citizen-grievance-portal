@@ -20,13 +20,19 @@ public class ComplaintService {
     private final ComplaintRepository complaintRepository;
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
+    private final com.raj.citizen_grievance_backend.repository.ComplaintImageRepository complaintImageRepository;
+    private final StorageService storageService;
 
     public ComplaintService(ComplaintRepository complaintRepository,
                             CommentRepository commentRepository,
-                            UserRepository userRepository) {
+                            UserRepository userRepository,
+                            com.raj.citizen_grievance_backend.repository.ComplaintImageRepository complaintImageRepository,
+                            StorageService storageService) {
         this.complaintRepository = complaintRepository;
         this.commentRepository = commentRepository;
         this.userRepository = userRepository;
+        this.complaintImageRepository = complaintImageRepository;
+        this.storageService = storageService;
     }
 
     @Transactional
@@ -105,6 +111,35 @@ public class ComplaintService {
     }
 
     @Transactional
+    public ComplaintResponse uploadComplaintImage(UUID complaintId, org.springframework.web.multipart.MultipartFile file, UUID citizenId) {
+        Complaint complaint = complaintRepository.findById(complaintId)
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with ID: " + complaintId));
+
+        if (!complaint.getCitizen().getId().equals(citizenId)) {
+            throw new ForbiddenException("You do not have permission to modify this complaint");
+        }
+
+        if (complaint.getStatus() == ComplaintStatus.RESOLVED || complaint.getStatus() == ComplaintStatus.REJECTED) {
+            throw new BadRequestException("Cannot upload images to resolved or rejected complaints.");
+        }
+
+        String imageUuid = storageService.uploadImage(file);
+
+        ComplaintImage complaintImage = ComplaintImage.builder()
+                .complaint(complaint)
+                .imageUuid(imageUuid)
+                .build();
+
+        complaintImageRepository.save(complaintImage);
+
+        // Fetch again to have the new image mapped
+        complaint = complaintRepository.findById(complaintId)
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found"));
+
+        return mapToResponse(complaint);
+    }
+
+    @Transactional
     public CommentResponse addComment(UUID complaintId, CommentRequest request, UUID userId) {
         Complaint complaint = complaintRepository.findById(complaintId)
                 .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with ID: " + complaintId));
@@ -135,6 +170,11 @@ public class ComplaintService {
                 .map(this::mapToCommentResponse)
                 .collect(Collectors.toList());
 
+        List<String> imageUuids = complaint.getImages() != null ?
+                complaint.getImages().stream()
+                        .map(ComplaintImage::getImageUuid)
+                        .collect(Collectors.toList()) : java.util.Collections.emptyList();
+
         return ComplaintResponse.builder()
                 .id(complaint.getId())
                 .title(complaint.getTitle())
@@ -148,6 +188,8 @@ public class ComplaintService {
                 .createdAt(complaint.getCreatedAt())
                 .updatedAt(complaint.getUpdatedAt())
                 .comments(comments)
+                .imageUuids(imageUuids)
+                .resolutionImageUuid(complaint.getResolutionImageUuid())
                 .build();
     }
 

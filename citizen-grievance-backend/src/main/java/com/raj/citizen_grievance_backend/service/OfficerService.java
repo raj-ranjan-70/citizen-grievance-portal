@@ -28,13 +28,16 @@ public class OfficerService {
     private final UserRepository userRepository;
     private final ComplaintRepository complaintRepository;
     private final CommentRepository commentRepository;
+    private final StorageService storageService;
 
     public OfficerService(UserRepository userRepository,
                           ComplaintRepository complaintRepository,
-                          CommentRepository commentRepository) {
+                          CommentRepository commentRepository,
+                          StorageService storageService) {
         this.userRepository = userRepository;
         this.complaintRepository = complaintRepository;
         this.commentRepository = commentRepository;
+        this.storageService = storageService;
     }
 
     private void verifyOfficer(UUID officerId) {
@@ -90,6 +93,29 @@ public class OfficerService {
         return mapToComplaintResponse(savedComplaint);
     }
 
+    @Transactional
+    public ComplaintResponse resolveComplaint(UUID complaintId, org.springframework.web.multipart.MultipartFile file, UUID officerId) {
+        verifyOfficer(officerId);
+
+        if (file == null || file.isEmpty()) {
+            throw new BadRequestException("Proof of resolution image is mandatory");
+        }
+
+        Complaint complaint = complaintRepository.findById(complaintId)
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with ID: " + complaintId));
+
+        if (complaint.getAssignedOfficer() == null || !complaint.getAssignedOfficer().getId().equals(officerId)) {
+            throw new ForbiddenException("Access Denied: This complaint is not assigned to you");
+        }
+
+        String imageUuid = storageService.uploadImage(file);
+        complaint.setResolutionImageUuid(imageUuid);
+        complaint.setStatus(ComplaintStatus.RESOLVED);
+
+        Complaint savedComplaint = complaintRepository.save(complaint);
+        return mapToComplaintResponse(savedComplaint);
+    }
+
     private ComplaintResponse mapToComplaintResponse(Complaint complaint) {
         List<CommentResponse> comments = commentRepository.findByComplaintIdOrderByCreatedAtAsc(complaint.getId())
                 .stream()
@@ -101,6 +127,11 @@ public class OfficerService {
                         .createdAt(c.getCreatedAt())
                         .build())
                 .collect(Collectors.toList());
+
+        List<String> imageUuids = complaint.getImages() != null ?
+                complaint.getImages().stream()
+                        .map(com.raj.citizen_grievance_backend.entity.ComplaintImage::getImageUuid)
+                        .collect(Collectors.toList()) : java.util.Collections.emptyList();
 
         return ComplaintResponse.builder()
                 .id(complaint.getId())
@@ -115,6 +146,8 @@ public class OfficerService {
                 .createdAt(complaint.getCreatedAt())
                 .updatedAt(complaint.getUpdatedAt())
                 .comments(comments)
+                .imageUuids(imageUuids)
+                .resolutionImageUuid(complaint.getResolutionImageUuid())
                 .build();
     }
 }

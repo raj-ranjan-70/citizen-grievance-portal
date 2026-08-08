@@ -16,6 +16,7 @@ import {
   AlertCircle,
   Edit2
 } from "lucide-react";
+import { useDropzone } from "react-dropzone";
 
 export const ComplaintDetailsPage = () => {
   const { id } = useParams();
@@ -29,6 +30,38 @@ export const ComplaintDetailsPage = () => {
   const [newComment, setNewComment] = useState("");
   const [commentLoading, setCommentLoading] = useState(false);
   const [commentError, setCommentError] = useState("");
+
+  // Image Upload states
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+
+  const onDrop = async (acceptedFiles) => {
+    if (acceptedFiles.length === 0) return;
+    setUploading(true);
+    setUploadError("");
+    try {
+      for (const file of acceptedFiles) {
+        const updated = await complaintService.uploadImage(id, file);
+        setComplaint(updated);
+      }
+    } catch (err) {
+      setUploadError(err.response?.data?.message || "Failed to upload image. Please check file format and size.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      "image/jpeg": [".jpg", ".jpeg"],
+      "image/png": [".png"],
+      "image/webp": [".webp"],
+      "image/gif": [".gif"]
+    },
+    maxSize: 5 * 1024 * 1024,
+    multiple: true
+  });
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -242,6 +275,99 @@ export const ComplaintDetailsPage = () => {
               {complaint.description}
             </div>
           </div>
+
+          {/* Grievance Attachments (Images) */}
+          <div className="space-y-3 pt-2">
+            <Label className="text-xs font-bold uppercase tracking-wider text-neutral-400">
+              Grievance Attachments ({complaint.imageUuids?.length || 0})
+            </Label>
+            
+            {complaint.imageUuids && complaint.imageUuids.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                {complaint.imageUuids.map((uuid) => (
+                  <div key={uuid} className="group relative aspect-video rounded-lg overflow-hidden border border-neutral-200 bg-neutral-100 hover:shadow-md transition-all">
+                    <img
+                      src={`${import.meta.env.VITE_R2_PUBLIC_URL}/${uuid}.webp`}
+                      alt="Grievance attachment"
+                      className="size-full object-cover"
+                    />
+                    <a
+                      href={`${import.meta.env.VITE_R2_PUBLIC_URL}/${uuid}.webp`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-semibold transition-opacity"
+                    >
+                      View Full Size
+                    </a>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Dropzone for citizen uploads */}
+            {complaint.status !== "RESOLVED" && complaint.status !== "REJECTED" && (
+              <div
+                {...getRootProps()}
+                className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+                  isDragActive ? "border-primary bg-primary/5" : "border-neutral-300 hover:border-primary/50"
+                }`}
+              >
+                <input {...getInputProps()} />
+                <div className="flex flex-col items-center justify-center space-y-2">
+                  <div className="size-10 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-500">
+                    {uploading ? (
+                      <Loader2 className="size-5 animate-spin text-primary" />
+                    ) : (
+                      <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                      </svg>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-neutral-800">
+                      {uploading ? "Processing and uploading..." : "Click to upload or drag & drop"}
+                    </p>
+                    <p className="text-xs text-neutral-500 mt-1">
+                      WebP, JPEG, PNG, or GIF up to 5MB (images will be resized and optimized)
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {uploadError && (
+              <p className="text-xs text-error font-medium flex items-center gap-1">
+                <AlertCircle className="size-3.5" /> {uploadError}
+              </p>
+            )}
+          </div>
+
+          {/* Resolution Proof Attachments */}
+          {complaint.status === "RESOLVED" && complaint.resolutionImageUuid && (
+            <div className="space-y-3 pt-4 border-t border-neutral-100">
+              <Label className="text-sm font-bold uppercase tracking-wider text-success flex items-center gap-1.5">
+                <CheckCircle className="size-4 shrink-0 text-success" />
+                Proof of Resolution Uploaded by Officer
+              </Label>
+              <div className="max-w-md rounded-lg overflow-hidden border border-success/30 bg-success/5 p-2 hover:shadow-md transition-all">
+                <div className="relative aspect-video rounded-md overflow-hidden bg-neutral-100 group">
+                  <img
+                    src={`${import.meta.env.VITE_R2_PUBLIC_URL}/${complaint.resolutionImageUuid}.webp`}
+                    alt="Proof of resolution"
+                    className="size-full object-cover"
+                  />
+                  <a
+                    href={`${import.meta.env.VITE_R2_PUBLIC_URL}/${complaint.resolutionImageUuid}.webp`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-semibold transition-opacity"
+                  >
+                    View Resolution Image
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

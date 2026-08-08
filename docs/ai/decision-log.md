@@ -42,5 +42,10 @@
 - **Decision:** Set `spring.jpa.hibernate.ddl-auto=update` in the development `application.properties` and introduce a dedicated test configuration file in `src/test/resources/application.properties` pointing to a separate `citizen_grievance_test_db` database using `ddl-auto=create-drop`.
 - **Rationale:** Prevents server restarts from dropping development database tables, and ensures integration test runs (which call database purging/deletions) do not wipe out development user accounts and filed complaints.
 
+## 11. Image Upload Pipeline & Cloudflare R2 Integration
+- **Decision:** Setup an AWS SDK v2 `S3Client` bean to connect to Cloudflare R2, implement a `StorageService` to validate, resize, and convert images to WebP, and add a `ComplaintImage` table mapping.
+- **Rationale:** Supports attaching multiple visual records to citizen grievances to facilitate investigations and mandates proof of resolution images from officers. Converting to WebP and compressing images reduces bandwidth overhead and optimizes storage.
+- **Technical Details:** The `StorageService` enforces a <5MB size limit and content-type checks, resizes to a max of 1200x1200px using `Thumbnailator`, converts to WebP via `ImageIO` (utilizing `webp-imageio` plugin), and uploads to R2 using path-style addressing. The React client integrates `react-dropzone` for drag-and-drop citizen uploads and uses native inputs for officer proof uploads.
+
 
 

@@ -44,6 +44,7 @@ Maps to the `Complaint` entity. Stores grievance details filed by citizens.
 | `priority` | `VARCHAR(50)` | `NOT NULL` | Priority rating: `LOW`, `MEDIUM`, `HIGH`. |
 | `status` | `VARCHAR(50)` | `NOT NULL` | Life-cycle status: `PENDING`, `ASSIGNED`, `RESOLVED`, `REJECTED`. |
 | `assigned_officer_id`| `BINARY(16)`| `FOREIGN KEY`, `NULLABLE` | Reference to the Officer assigned to address this. |
+| `resolution_image_uuid` | `VARCHAR(255)` | `NULLABLE` | Cloudflare R2 image UUID representing proof of resolution. |
 | `created_at` | `DATETIME(6)` | `NOT NULL` | Timestamp when the grievance was filed. |
 | `updated_at` | `DATETIME(6)` | `NOT NULL` | Timestamp when last updated. |
 
@@ -60,3 +61,16 @@ Maps to the `Comment` entity. Stores the conversation thread history for complai
 | `author_id` | `BINARY(16)` | `FOREIGN KEY`, `NOT NULL` | Reference to the user (Citizen/Officer) who wrote it. |
 | `content` | `TEXT` | `NOT NULL` | Body of the message/update. |
 | `created_at` | `DATETIME(6)` | `NOT NULL` | Timestamp when comment was added. |
+
+---
+
+## 5. `complaint_images` Table
+
+Maps to the `ComplaintImage` entity. Stores multiple images uploaded by the citizen for a complaint.
+
+| Column Name | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | `BINARY(16)` | `PRIMARY KEY`, `NOT NULL` | Unique identifier (UUID). |
+| `complaint_id` | `BINARY(16)` | `FOREIGN KEY`, `NOT NULL` | Reference to the associated Complaint. |
+| `image_uuid` | `VARCHAR(255)` | `NOT NULL` | Cloudflare R2 image UUID. |
+| `uploaded_at` | `DATETIME(6)` | `NOT NULL` | Timestamp when the image was uploaded. |

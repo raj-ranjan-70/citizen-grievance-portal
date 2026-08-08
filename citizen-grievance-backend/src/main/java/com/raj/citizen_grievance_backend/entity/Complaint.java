@@ -53,9 +53,16 @@ public class Complaint {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "resolution_image_uuid")
+    private String resolutionImageUuid;
+
     @OneToMany(mappedBy = "complaint", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Comment> comments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "complaint", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<ComplaintImage> images = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

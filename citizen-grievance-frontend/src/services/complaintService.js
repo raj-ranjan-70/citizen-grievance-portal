@@ -48,6 +48,17 @@ export const complaintService = {
   addComment: async (id, commentData) => {
     const response = await api.post(`/v1/complaints/${id}/comments`, commentData);
     return response.data.data;
+  },
+
+  uploadImage: async (id, file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await api.post(`/v1/complaints/${id}/images`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data"
+      }
+    });
+    return mapComplaintStatus(response.data.data);
   }
 };
 

@@ -111,4 +111,38 @@ public class OfficerController {
                 .build();
         return ResponseEntity.ok(apiResponse);
     }
+
+    @PostMapping(value = "/complaints/{id}/resolve", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Resolve complaint with proof image", description = "Allows an assigned officer to mark a complaint as RESOLVED by uploading a proof image")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Complaint resolved successfully",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Missing upload image or invalid file",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Not authenticated",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Access denied: complaint belongs to another officer or not authorized role",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Complaint not found",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+    })
+    public ResponseEntity<ApiResponse<ComplaintResponse>> resolveComplaint(
+            @PathVariable UUID id,
+            @RequestParam(value = "file", required = false) org.springframework.web.multipart.MultipartFile file,
+            HttpServletRequest servletRequest) {
+
+        if (file == null || file.isEmpty()) {
+            throw new com.raj.citizen_grievance_backend.exception.BadRequestException("Proof of resolution image is mandatory");
+        }
+
+        UUID officerId = getAuthenticatedUserId(servletRequest);
+        ComplaintResponse response = officerService.resolveComplaint(id, file, officerId);
+
+        ApiResponse<ComplaintResponse> apiResponse = ApiResponse.<ComplaintResponse>builder()
+                .success(true)
+                .message("Complaint resolved successfully")
+                .data(response)
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
 }

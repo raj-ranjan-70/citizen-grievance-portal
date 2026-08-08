@@ -54,4 +54,10 @@ public class ComplaintResponse {
 
     @Schema(description = "List of associated comments on this complaint")
     private List<CommentResponse> comments;
+
+    @Schema(description = "List of associated image UUIDs submitted by the citizen", example = "[\"e1b12345-1234-1234-1234-123412341234\"]")
+    private List<String> imageUuids;
+
+    @Schema(description = "UUID of the proof image uploaded by the officer upon resolution", example = "f9c98765-4321-4321-4321-432143214321")
+    private String resolutionImageUuid;
 }
