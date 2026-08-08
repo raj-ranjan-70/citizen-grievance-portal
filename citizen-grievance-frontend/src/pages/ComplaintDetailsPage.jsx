@@ -17,10 +17,12 @@ import {
   Edit2
 } from "lucide-react";
 import { useDropzone } from "react-dropzone";
+import { useAuth } from "@/hooks/useAuth";
 
 export const ComplaintDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [complaint, setComplaint] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -100,7 +102,7 @@ export const ComplaintDetailsPage = () => {
     try {
       const postedComment = await complaintService.addComment(id, {
         content: newComment.trim()
-      });
+      }, user?.role);
       setComplaint((prev) => ({
         ...prev,
         comments: [...(prev.comments || []), postedComment]

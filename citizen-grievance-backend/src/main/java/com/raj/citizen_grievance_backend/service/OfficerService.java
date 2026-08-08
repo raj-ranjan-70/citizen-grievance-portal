@@ -1,7 +1,9 @@
 package com.raj.citizen_grievance_backend.service;
 
+import com.raj.citizen_grievance_backend.dto.CommentRequest;
 import com.raj.citizen_grievance_backend.dto.CommentResponse;
 import com.raj.citizen_grievance_backend.dto.ComplaintResponse;
+import com.raj.citizen_grievance_backend.entity.Comment;
 import com.raj.citizen_grievance_backend.entity.Complaint;
 import com.raj.citizen_grievance_backend.entity.ComplaintStatus;
 import com.raj.citizen_grievance_backend.entity.Role;
@@ -167,6 +169,54 @@ public class OfficerService {
         );
 
         return mapToComplaintResponse(savedComplaint);
+    }
+
+    @Transactional
+    public CommentResponse addComment(UUID complaintId, CommentRequest request, UUID officerId) {
+        verifyOfficer(officerId);
+
+        Complaint complaint = complaintRepository.findById(complaintId)
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with ID: " + complaintId));
+
+        if (complaint.getAssignedOfficer() == null || !complaint.getAssignedOfficer().getId().equals(officerId)) {
+            throw new ForbiddenException("Access Denied: This complaint is not assigned to you");
+        }
+
+        User author = userRepository.findById(officerId)
+                .orElseThrow(() -> new UnauthorizedException("User not found"));
+
+        Comment comment = Comment.builder()
+                .complaint(complaint)
+                .author(author)
+                .content(request.getContent())
+                .build();
+
+        Comment savedComment = commentRepository.save(comment);
+
+        // Notify citizen owner of comment
+        notificationService.sendNotification(
+            complaint.getCitizen().getId(),
+            author.getName() + " commented on: " + complaint.getTitle(),
+            complaint.getId()
+        );
+
+        return CommentResponse.builder()
+                .id(savedComment.getId())
+                .content(savedComment.getContent())
+                .authorName(savedComment.getAuthor().getName())
+                .authorRole(savedComment.getAuthor().getRole().name())
+                .createdAt(savedComment.getCreatedAt())
+                .build();
+    }
+
+    private CommentResponse mapToCommentResponse(Comment comment) {
+        return CommentResponse.builder()
+                .id(comment.getId())
+                .content(comment.getContent())
+                .authorName(comment.getAuthor().getName())
+                .authorRole(comment.getAuthor().getRole().name())
+                .createdAt(comment.getCreatedAt())
+                .build();
     }
 
     private ComplaintResponse mapToComplaintResponse(Complaint complaint) {

@@ -19,7 +19,7 @@ import {
 
 export const AdminDashboardPage = () => {
   const [activeTab, setActiveTab] = useState("complaints");
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const deepLinkComplaintId = searchParams.get("complaintId");
 
   // Data states
@@ -47,6 +47,11 @@ export const AdminDashboardPage = () => {
   const [createError, setCreateError] = useState("");
   const [createSuccess, setCreateSuccess] = useState("");
 
+  const handleCloseViewModal = () => {
+    setViewingComplaint(null);
+    setSearchParams({});
+  };
+
   const fetchData = async () => {
     setLoading(true);
     setError("");
@@ -68,9 +73,13 @@ export const AdminDashboardPage = () => {
     fetchData();
   }, []);
 
-  // Deep-link: auto-open complaint view modal from notification click (?complaintId=...)
+  // Deep-link: auto-open/close complaint view modal from notification click (?complaintId=...)
   useEffect(() => {
-    if (!deepLinkComplaintId || complaints.length === 0) return;
+    if (!deepLinkComplaintId) {
+      setViewingComplaint(null);
+      return;
+    }
+    if (complaints.length === 0) return;
     const found = complaints.find((c) => c.id === deepLinkComplaintId);
     if (found) {
       setViewingComplaint(found);
@@ -549,7 +558,7 @@ export const AdminDashboardPage = () => {
                 </p>
               </div>
               <button
-                onClick={() => setViewingComplaint(null)}
+                onClick={handleCloseViewModal}
                 className="text-neutral-400 hover:text-neutral-600 focus:outline-none focus:ring-2 focus:ring-primary rounded p-1 cursor-pointer"
               >
                 ✕
@@ -652,7 +661,7 @@ export const AdminDashboardPage = () => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setViewingComplaint(null)}
+                onClick={handleCloseViewModal}
               >
                 Close
               </Button>

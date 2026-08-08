@@ -43,20 +43,6 @@ export const Navbar = React.forwardRef(({
         { name: "About", href: "#about" },
       ];
     }
-    const role = user.role?.toUpperCase();
-    if (role === "ADMIN") {
-      return [{ name: "Dashboard", href: "/admin/dashboard" }];
-    }
-    if (role === "OFFICER") {
-      return [{ name: "Dashboard", href: "/officer/dashboard" }];
-    }
-    if (role === "CITIZEN") {
-      return [
-        { name: "Dashboard", href: "/citizen/dashboard" },
-        { name: "My Complaints", href: "/citizen/complaints" },
-        { name: "New Complaint", href: "/citizen/complaints/new" }
-      ];
-    }
     return [];
   };
 
@@ -205,8 +191,8 @@ export const Navbar = React.forwardRef(({
                     </div>
                   )}
                 </div>
-                <div className="hidden sm:flex items-center gap-2 border-l border-neutral-200 pl-4">
-                  <div className="flex flex-col text-right mr-2">
+                <div className="flex items-center gap-2 border-l border-neutral-200 pl-2 sm:pl-4">
+                  <div className="hidden sm:flex flex-col text-right mr-2">
                     <span className="text-sm font-medium text-neutral-800">
                       {user.name}
                     </span>
@@ -214,7 +200,7 @@ export const Navbar = React.forwardRef(({
                       {user.role}
                     </span>
                   </div>
-                  <Button variant="outline" size="sm" onClick={onLogout}>
+                  <Button variant="outline" size="sm" onClick={onLogout} className="px-2 sm:px-3 text-xs sm:text-sm">
                     Sign Out
                   </Button>
                 </div>
@@ -235,117 +221,54 @@ export const Navbar = React.forwardRef(({
                 </Button>
               </div>
             )}
-
             {/* Mobile Menu Trigger */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-expanded={mobileMenuOpen}
-              aria-label="Toggle menu"
-            >
-              {mobileMenuOpen ? (
-                <X className="size-6" />
-              ) : (
-                <Menu className="size-6" />
-              )}
-            </Button>
+            {!user && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                aria-expanded={mobileMenuOpen}
+                aria-label="Toggle menu"
+              >
+                {mobileMenuOpen ? (
+                  <X className="size-6" />
+                ) : (
+                  <Menu className="size-6" />
+                )}
+              </Button>
+            )}
           </div>
         </div>
       </Container>
-
+ 
       {/* Mobile Drawer */}
-      {mobileMenuOpen && (
+      {!user && mobileMenuOpen && (
         <div className="md:hidden border-t border-neutral-200 bg-background px-4 py-4">
           <nav className="flex flex-col gap-3" aria-label="Mobile Navigation">
-            {user ? (
-              <>
-                {user.role?.toUpperCase() === "ADMIN" && (
-                  <Link
-                    to="/admin/dashboard"
-                    className="block py-2 px-3 rounded-md text-base font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Admin Dashboard
-                  </Link>
+            {navLinks.map((link) => (
+              <a
+                key={link.name}
+                href={link.href}
+                className={cn(
+                  "block py-2 px-3 rounded-md text-base font-medium transition-colors",
+                  link.name === activeLink
+                    ? "bg-primary/10 text-primary"
+                    : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
                 )}
-                {user.role?.toUpperCase() === "OFFICER" && (
-                  <Link
-                    to="/officer/dashboard"
-                    className="block py-2 px-3 rounded-md text-base font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Officer Dashboard
-                  </Link>
-                )}
-                {user.role?.toUpperCase() === "CITIZEN" && (
-                  <>
-                    <Link
-                      to="/citizen/dashboard"
-                      className="block py-2 px-3 rounded-md text-base font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Dashboard
-                    </Link>
-                    <Link
-                      to="/citizen/complaints"
-                      className="block py-2 px-3 rounded-md text-base font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      My Complaints
-                    </Link>
-                    <Link
-                      to="/citizen/complaints/new"
-                      className="block py-2 px-3 rounded-md text-base font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      New Complaint
-                    </Link>
-                  </>
-                )}
-              </>
-            ) : (
-              navLinks.map((link) => (
-                <a
-                  key={link.name}
-                  href={link.href}
-                  className={cn(
-                    "block py-2 px-3 rounded-md text-base font-medium transition-colors",
-                    link.name === activeLink
-                      ? "bg-primary/10 text-primary"
-                      : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
-                  )}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {link.name}
-                </a>
-              ))
-            )}
-            {!user ? (
-              <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-neutral-200">
-                <Button variant="outline" as={Link} to="/login" onClick={() => setMobileMenuOpen(false)} className="w-full">
-                  Login
-                </Button>
-                <Button variant="primary" as={Link} to="/signup" onClick={() => setMobileMenuOpen(false)} className="w-full">
-                  Sign Up
-                </Button>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-neutral-200">
-                <div className="flex flex-col px-3 py-1 mb-2">
-                  <span className="text-sm font-medium text-neutral-800">
-                    {user.name}
-                  </span>
-                  <span className="text-xs text-neutral-500 capitalize">
-                    {user.role}
-                  </span>
-                </div>
-                <Button variant="outline" onClick={() => { onLogout?.(); setMobileMenuOpen(false); }} className="w-full">
-                  Sign Out
-                </Button>
-              </div>
-            )}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {link.name}
+              </a>
+            ))}
+            <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-neutral-200">
+              <Button variant="outline" as={Link} to="/login" onClick={() => setMobileMenuOpen(false)} className="w-full">
+                Login
+              </Button>
+              <Button variant="primary" as={Link} to="/signup" onClick={() => setMobileMenuOpen(false)} className="w-full">
+                Sign Up
+              </Button>
+            </div>
           </nav>
         </div>
       )}
