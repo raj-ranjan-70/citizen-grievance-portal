@@ -1,6 +1,7 @@
 
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
+import { NotificationProvider } from "@/context/NotificationContext";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { ProtectedLayout } from "@/components/layout/ProtectedLayout";
 import { ProtectedRoute } from "@/components/ui/ProtectedRoute";
@@ -21,8 +22,9 @@ import { OfficerDashboardPage } from "@/pages/OfficerDashboardPage";
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
+      <NotificationProvider>
+        <BrowserRouter>
+          <Routes>
           {/* Public Routes wrapped in PublicLayout */}
           <Route element={<PublicLayout />}>
             <Route path="/" element={<LandingPage />} />
@@ -67,6 +69,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
+      </NotificationProvider>
     </AuthProvider>
   );
 }

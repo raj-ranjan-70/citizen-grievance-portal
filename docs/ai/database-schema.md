@@ -75,3 +75,18 @@ Maps to the `ComplaintImage` entity. Stores multiple images uploaded by the citi
 | `complaint_id` | `BINARY(16)` | `FOREIGN KEY`, `NOT NULL` | Reference to the associated Complaint. |
 | `image_uuid` | `VARCHAR(255)` | `NOT NULL` | Cloudflare R2 image UUID. |
 | `uploaded_at` | `DATETIME(6)` | `NOT NULL` | Timestamp when the image was uploaded. |
+
+---
+
+## 6. `notifications` Table
+
+Maps to the `Notification` entity. Stores user notifications.
+
+| Column Name | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | `BINARY(16)` | `PRIMARY KEY`, `NOT NULL` | Unique identifier (UUID). |
+| `recipient_id` | `BINARY(16)` | `NOT NULL` | Reference to the User receiving the alert. |
+| `message` | `TEXT` | `NOT NULL` | Message contents. |
+| `related_complaint_id` | `BINARY(16)` | `NULLABLE` | Deep-linked Complaint UUID. |
+| `is_read` | `BOOLEAN` | `NOT NULL` | Status flag. |
+| `created_at` | `DATETIME(6)` | `NOT NULL` | Timestamp when notification was generated. |

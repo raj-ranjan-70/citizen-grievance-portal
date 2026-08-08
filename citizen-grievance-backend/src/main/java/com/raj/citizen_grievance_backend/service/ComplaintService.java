@@ -22,17 +22,20 @@ public class ComplaintService {
     private final UserRepository userRepository;
     private final com.raj.citizen_grievance_backend.repository.ComplaintImageRepository complaintImageRepository;
     private final StorageService storageService;
+    private final NotificationService notificationService;
 
     public ComplaintService(ComplaintRepository complaintRepository,
                             CommentRepository commentRepository,
                             UserRepository userRepository,
                             com.raj.citizen_grievance_backend.repository.ComplaintImageRepository complaintImageRepository,
-                            StorageService storageService) {
+                            StorageService storageService,
+                            NotificationService notificationService) {
         this.complaintRepository = complaintRepository;
         this.commentRepository = commentRepository;
         this.userRepository = userRepository;
         this.complaintImageRepository = complaintImageRepository;
         this.storageService = storageService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -54,6 +57,17 @@ public class ComplaintService {
                 .build();
 
         Complaint savedComplaint = complaintRepository.save(complaint);
+
+        // Notify all administrators about the new complaint
+        List<User> admins = userRepository.findByRole(Role.ADMIN);
+        for (User admin : admins) {
+            notificationService.sendNotification(
+                admin.getId(),
+                "A new complaint has been created: " + savedComplaint.getTitle(),
+                savedComplaint.getId()
+            );
+        }
+
         return mapToResponse(savedComplaint);
     }
 
@@ -140,6 +154,15 @@ public class ComplaintService {
             complaint.getImages().add(complaintImage);
         }
 
+        // Notify the assigned officer that a new image has been uploaded
+        if (complaint.getAssignedOfficer() != null) {
+            notificationService.sendNotification(
+                complaint.getAssignedOfficer().getId(),
+                "Citizen " + complaint.getCitizen().getName() + " uploaded a new image to: " + complaint.getTitle(),
+                complaint.getId()
+            );
+        }
+
         return mapToResponse(complaint);
     }
 
@@ -165,6 +188,24 @@ public class ComplaintService {
                 .build();
 
         Comment savedComment = commentRepository.save(comment);
+
+        // Trigger real-time notifications
+        if (author.getRole() == Role.CITIZEN) {
+            if (complaint.getAssignedOfficer() != null) {
+                notificationService.sendNotification(
+                    complaint.getAssignedOfficer().getId(),
+                    "Citizen " + author.getName() + " commented on: " + complaint.getTitle(),
+                    complaint.getId()
+                );
+            }
+        } else {
+            notificationService.sendNotification(
+                complaint.getCitizen().getId(),
+                author.getName() + " commented on: " + complaint.getTitle(),
+                complaint.getId()
+            );
+        }
+
         return mapToCommentResponse(savedComment);
     }
 

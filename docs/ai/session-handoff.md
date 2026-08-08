@@ -1,10 +1,21 @@
-# Session Handoff - Citizen Grievance Portal (Phase 6 Master Merged)
+# Session Handoff - Citizen Grievance Portal (Phase 7 Complete)
 
 ## Completed in Current Session
-- **Phase 6 Completed & Merged into Master:**
-  - Added backend validation check that only citizens can create complaints (throwing ForbiddenException for non-citizens).
-  - Configured database model tracking for resolving/rejections.
-  - Refactored frontend image uploader inside `ComplaintDetailsPage.jsx` to upload citizen images, immediately trigger a refetch of the complaint, and render newly attached files cleanly.
-  - Resolved double state declarations on `resolutionFile` and cleaned up unused components/lucide icons across the frontend to keep ESLint clean.
-  - Staged and committed changes on branch `feature/ui-ux-feedback-remediation`.
-  - Merged feature branch into `master` branch cleanly.
+- **Phase 7: Real-Time Notifications using Server-Sent Events (SSE)**
+  - Checked out the feature branch `feature/realtime-sse-notifications`.
+  - Created `Notification` entity, `NotificationRepository` interface, and `NotificationResponse` DTO.
+  - Implemented `NotificationService` handling subscription map connection life cycles, `@Scheduled` heartbeat pings, and notification broadcasts.
+  - Enabled scheduling globally in `CitizenGrievanceBackendApplication.java`.
+  - Injected triggers for citizen complaint creation (notify admins), officer assignment (notify officer and citizen), commenting (notify author counterpart), image uploads (notify officer), and status resolutions/rejections (notify citizen).
+  - Exposed controllers under `/api/v1/notifications/subscribe`, `/api/v1/notifications/unread`, and `PUT` read status modifications.
+  - Verified backend compiles cleanly (`mvn clean compile` succeeded).
+  - Built frontend `notificationService.js` and global `NotificationContext.jsx` handling native `EventSource` connections with credentials.
+  - Wrapped router tree in `App.jsx` with the `NotificationProvider`.
+  - Refactored `navbar.jsx` to render active unread badge counts, drop lists with timestamps, close icons to mark individual alerts as read, and deep-link routing.
+  - Verified Vite production build is fully operational (`npm run build` completed successfully) with 0 ESLint errors.
+  - Updated database schema, decision logs, and session handoffs.
+
+## Next Steps
+- Commit the Phase 7 changes on branch `feature/realtime-sse-notifications`.
+- Merge the branch into `master`.
+- Perform live verification.

@@ -29,15 +29,18 @@ public class OfficerService {
     private final ComplaintRepository complaintRepository;
     private final CommentRepository commentRepository;
     private final StorageService storageService;
+    private final NotificationService notificationService;
 
     public OfficerService(UserRepository userRepository,
                           ComplaintRepository complaintRepository,
                           CommentRepository commentRepository,
-                          StorageService storageService) {
+                          StorageService storageService,
+                          NotificationService notificationService) {
         this.userRepository = userRepository;
         this.complaintRepository = complaintRepository;
         this.commentRepository = commentRepository;
         this.storageService = storageService;
+        this.notificationService = notificationService;
     }
 
     private void verifyOfficer(UUID officerId) {
@@ -90,6 +93,14 @@ public class OfficerService {
 
         complaint.setStatus(newStatus);
         Complaint savedComplaint = complaintRepository.save(complaint);
+
+        // Notify citizen owner of status update
+        notificationService.sendNotification(
+            savedComplaint.getCitizen().getId(),
+            "Your complaint status has changed to " + newStatus + ": " + savedComplaint.getTitle(),
+            savedComplaint.getId()
+        );
+
         return mapToComplaintResponse(savedComplaint);
     }
 
@@ -117,6 +128,14 @@ public class OfficerService {
         complaint.setStatus(ComplaintStatus.RESOLVED);
 
         Complaint savedComplaint = complaintRepository.save(complaint);
+
+        // Notify citizen owner of resolution
+        notificationService.sendNotification(
+            savedComplaint.getCitizen().getId(),
+            "Your complaint has been RESOLVED: " + savedComplaint.getTitle(),
+            savedComplaint.getId()
+        );
+
         return mapToComplaintResponse(savedComplaint);
     }
 
@@ -139,6 +158,14 @@ public class OfficerService {
         complaint.setStatus(ComplaintStatus.REJECTED);
 
         Complaint savedComplaint = complaintRepository.save(complaint);
+
+        // Notify citizen owner of rejection
+        notificationService.sendNotification(
+            savedComplaint.getCitizen().getId(),
+            "Your complaint has been REJECTED: " + savedComplaint.getTitle(),
+            savedComplaint.getId()
+        );
+
         return mapToComplaintResponse(savedComplaint);
     }
 

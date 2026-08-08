@@ -22,15 +22,18 @@ public class AdminService {
     private final ComplaintRepository complaintRepository;
     private final CommentRepository commentRepository;
     private final PasswordEncoder passwordEncoder;
+    private final NotificationService notificationService;
 
     public AdminService(UserRepository userRepository,
                         ComplaintRepository complaintRepository,
                         CommentRepository commentRepository,
-                        PasswordEncoder passwordEncoder) {
+                        PasswordEncoder passwordEncoder,
+                        NotificationService notificationService) {
         this.userRepository = userRepository;
         this.complaintRepository = complaintRepository;
         this.commentRepository = commentRepository;
         this.passwordEncoder = passwordEncoder;
+        this.notificationService = notificationService;
     }
 
     private void verifyAdmin(UUID adminId) {
@@ -97,6 +100,21 @@ public class AdminService {
         complaint.setStatus(ComplaintStatus.ASSIGNED);
 
         Complaint savedComplaint = complaintRepository.save(complaint);
+
+        // Notify officer of assignment
+        notificationService.sendNotification(
+            officer.getId(),
+            "A new complaint has been assigned to you: " + savedComplaint.getTitle(),
+            savedComplaint.getId()
+        );
+
+        // Notify citizen owner of assignment status change
+        notificationService.sendNotification(
+            savedComplaint.getCitizen().getId(),
+            "Your complaint has been assigned to an officer: " + officer.getName(),
+            savedComplaint.getId()
+        );
+
         return mapToComplaintResponse(savedComplaint);
     }
 

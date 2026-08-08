@@ -52,6 +52,11 @@
 - **Rationale:** Aligns with requirements to ensure officers provide descriptive rejection reasons and resolution details to citizens, keeps navigation focused during active sessions, and simplifies status updates.
 - **Technical Details:** The `remarks` text field is updated on status changes. The React Navbar hides public links when the user is logged in. Upload alerts show transient toast overlays. Officer actions are split into distinct View, Resolve, and Reject modals. Admin detail inspect screens render all metadata, attached images, comments, and resolution proof.
 
+## 13. Real-Time Notifications using Server-Sent Events (SSE) (Phase 7)
+- **Decision:** Establish an SSE broadcast hub inside Spring Boot and consume it with a React context provider to support real-time user notifications.
+- **Rationale:** Ensures citizens, officers, and administrators receive immediate notifications when complaints are created, comments posted, images attached, or assignments updated, improving overall response times.
+- **Technical Details:** The `NotificationService` maintains active connection streams in a `ConcurrentHashMap` with multi-tab support. A scheduled heartbeat runs every 15s to keep connections open. Trigger points are injected into existing Services. The React app opens the SSE stream using native `EventSource` with `withCredentials: true` to forward session cookies, prepending incoming messages to states and rendering them in a customized Navbar dropdown.
+
 
 
 

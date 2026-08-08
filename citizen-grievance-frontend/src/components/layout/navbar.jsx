@@ -1,6 +1,7 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useContext, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Menu, X, Bell, Landmark } from "lucide-react";
+import { NotificationContext } from "@/context/NotificationContext";
 import { Button } from "../ui/button";
 import { Container } from "../ui/container";
 import { cn } from "@/lib/utils";
@@ -17,6 +18,20 @@ export const Navbar = React.forwardRef(({
   ...props
 }, ref) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  const navigate = useNavigate();
+  const { notifications, markAsRead } = useContext(NotificationContext) || { notifications: [], markAsRead: () => {} };
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
 
   const getNavLinks = () => {
     if (!user) {
@@ -111,15 +126,76 @@ export const Navbar = React.forwardRef(({
           <div className="flex items-center gap-4">
             {user ? (
               <>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="relative text-neutral-600 hover:text-neutral-950"
-                  aria-label="Notifications"
-                >
-                  <Bell className="size-5" />
-                  <span className="absolute top-2.5 right-2.5 size-2 rounded-full bg-error" />
-                </Button>
+                {/* Real-time Notifications Bell */}
+                <div className="relative" ref={dropdownRef}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    className="relative text-neutral-600 hover:text-neutral-950 focus:outline-none cursor-pointer"
+                    aria-label="Notifications"
+                  >
+                    <Bell className="size-5" />
+                    {notifications.length > 0 && (
+                      <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-error text-[9px] font-bold text-white ring-2 ring-white">
+                        {notifications.length}
+                      </span>
+                    )}
+                  </Button>
+
+                  {/* Dropdown Menu */}
+                  {dropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-80 rounded-lg border border-neutral-200 bg-white shadow-xl py-1 z-50 animate-fadeIn text-sm">
+                      <div className="px-4 py-2.5 border-b border-neutral-100 flex items-center justify-between bg-neutral-50/50">
+                        <span className="font-bold text-neutral-800">Notifications</span>
+                        <span className="text-[10px] font-semibold bg-neutral-200 text-neutral-700 px-2 py-0.5 rounded-full">
+                          {notifications.length} Unread
+                        </span>
+                      </div>
+                      <div className="max-h-72 overflow-y-auto divide-y divide-neutral-100">
+                        {notifications.length === 0 ? (
+                          <div className="px-4 py-8 text-center text-xs text-neutral-400 font-medium">
+                            No new notifications
+                          </div>
+                        ) : (
+                          notifications.map((n) => (
+                            <div
+                              key={n.id}
+                              className="p-3 hover:bg-neutral-50 transition-colors flex items-start gap-2.5 cursor-pointer relative group"
+                              onClick={() => {
+                                markAsRead(n.id);
+                                setDropdownOpen(false);
+                                if (n.relatedComplaintId) {
+                                  navigate(`/complaints/${n.relatedComplaintId}`);
+                                }
+                              }}
+                            >
+                              <div className="size-2 rounded-full bg-primary mt-1.5 shrink-0" />
+                              <div className="flex-1 min-w-0 pr-6">
+                                <p className="text-xs text-neutral-700 font-medium leading-normal break-words">
+                                  {n.message}
+                                </p>
+                                <span className="text-[9px] text-neutral-400 font-medium mt-1 block">
+                                  {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  markAsRead(n.id);
+                                }}
+                                className="absolute right-2 top-3 p-1 rounded hover:bg-neutral-100 text-neutral-400 hover:text-neutral-600 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                title="Mark as read"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
                 <div className="hidden sm:flex items-center gap-2 border-l border-neutral-200 pl-4">
                   <div className="flex flex-col text-right mr-2">
                     <span className="text-sm font-medium text-neutral-800">
