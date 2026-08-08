@@ -27,8 +27,8 @@ export const Sidebar = React.forwardRef(({
 
   const citizenLinks = [
     { name: "Dashboard", icon: LayoutDashboard, path: "/citizen/dashboard" },
-    { name: "My Complaints", icon: FileText, path: "/complaints" },
-    { name: "New Complaint", icon: PlusCircle, path: "/complaints/new" },
+    { name: "My Complaints", icon: FileText, path: "/citizen/complaints" },
+    { name: "New Complaint", icon: PlusCircle, path: "/citizen/complaints/new" },
   ];
 
   const officerLinks = [

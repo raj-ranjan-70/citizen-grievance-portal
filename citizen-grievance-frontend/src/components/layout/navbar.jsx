@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Menu, X, Bell, Landmark } from "lucide-react";
 import { NotificationContext } from "@/context/NotificationContext";
+import { AuthContext } from "@/context/AuthContext";
 import { Button } from "../ui/button";
 import { Container } from "../ui/container";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,7 @@ export const Navbar = React.forwardRef(({
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const { notifications, markAsRead } = useContext(NotificationContext) || { notifications: [], markAsRead: () => {} };
+  const { user: authUser } = useContext(AuthContext) || {};
 
   useEffect(() => {
     const handleOutsideClick = (e) => {
@@ -51,8 +53,8 @@ export const Navbar = React.forwardRef(({
     if (role === "CITIZEN") {
       return [
         { name: "Dashboard", href: "/citizen/dashboard" },
-        { name: "My Complaints", href: "/complaints" },
-        { name: "New Complaint", href: "/complaints/new" }
+        { name: "My Complaints", href: "/citizen/complaints" },
+        { name: "New Complaint", href: "/citizen/complaints/new" }
       ];
     }
     return [];
@@ -166,7 +168,14 @@ export const Navbar = React.forwardRef(({
                                 markAsRead(n.id);
                                 setDropdownOpen(false);
                                 if (n.relatedComplaintId) {
-                                  navigate(`/complaints/${n.relatedComplaintId}`);
+                                  const role = (authUser?.role || user?.role)?.toUpperCase();
+                                  if (role === "CITIZEN") {
+                                    navigate(`/citizen/complaints/${n.relatedComplaintId}`);
+                                  } else if (role === "OFFICER") {
+                                    navigate(`/officer/dashboard?complaintId=${n.relatedComplaintId}`);
+                                  } else if (role === "ADMIN") {
+                                    navigate(`/admin/dashboard?complaintId=${n.relatedComplaintId}`);
+                                  }
                                 }
                               }}
                             >
@@ -280,14 +289,14 @@ export const Navbar = React.forwardRef(({
                       Dashboard
                     </Link>
                     <Link
-                      to="/complaints"
+                      to="/citizen/complaints"
                       className="block py-2 px-3 rounded-md text-base font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       My Complaints
                     </Link>
                     <Link
-                      to="/complaints/new"
+                      to="/citizen/complaints/new"
                       className="block py-2 px-3 rounded-md text-base font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
                       onClick={() => setMobileMenuOpen(false)}
                     >

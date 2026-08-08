@@ -48,21 +48,41 @@ function App() {
             />
           </Route>
 
-          {/* Protected Routes wrapped in ProtectedLayout & ProtectedRoute guard */}
+          {/* CITIZEN Protected Routes */}
           <Route
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={["CITIZEN"]}>
                 <ProtectedLayout />
               </ProtectedRoute>
             }
           >
             <Route path="/citizen/dashboard" element={<DashboardPage />} />
-            <Route path="/complaints" element={<MyComplaintsPage />} />
-            <Route path="/complaints/new" element={<CreateComplaintPage />} />
-            <Route path="/complaints/:id" element={<ComplaintDetailsPage />} />
-            <Route path="/complaints/:id/edit" element={<EditComplaintPage />} />
-            <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+            <Route path="/citizen/complaints" element={<MyComplaintsPage />} />
+            <Route path="/citizen/complaints/new" element={<CreateComplaintPage />} />
+            <Route path="/citizen/complaints/:id" element={<ComplaintDetailsPage />} />
+            <Route path="/citizen/complaints/:id/edit" element={<EditComplaintPage />} />
+          </Route>
+
+          {/* OFFICER Protected Routes */}
+          <Route
+            element={
+              <ProtectedRoute allowedRoles={["OFFICER"]}>
+                <ProtectedLayout />
+              </ProtectedRoute>
+            }
+          >
             <Route path="/officer/dashboard" element={<OfficerDashboardPage />} />
+          </Route>
+
+          {/* ADMIN Protected Routes */}
+          <Route
+            element={
+              <ProtectedRoute allowedRoles={["ADMIN"]}>
+                <ProtectedLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           </Route>
 
           {/* Fallback redirect */}

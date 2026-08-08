@@ -122,7 +122,7 @@ export const MyComplaintsPage = () => {
         </div>
         <Button
           as={Link}
-          to="/complaints/new"
+          to="/citizen/complaints/new"
           variant="primary"
           className="flex items-center gap-2 self-start sm:self-auto cursor-pointer"
         >
@@ -159,7 +159,7 @@ export const MyComplaintsPage = () => {
                 You haven't submitted any complaints yet. Click "File Grievance" to report an issue.
               </p>
             </div>
-            <Button as={Link} to="/complaints/new" variant="primary" size="sm" className="mt-2 cursor-pointer">
+            <Button as={Link} to="/citizen/complaints/new" variant="primary" size="sm" className="mt-2 cursor-pointer">
               File First Grievance
             </Button>
           </CardContent>
@@ -217,7 +217,7 @@ export const MyComplaintsPage = () => {
                   {/* Actions Row */}
                   <div className="grid grid-cols-3 gap-2">
                     <Button
-                      onClick={() => navigate(`/complaints/${complaint.id}`)}
+                      onClick={() => navigate(`/citizen/complaints/${complaint.id}`)}
                       variant="outline"
                       size="sm"
                       className="flex items-center justify-center gap-1.5 text-xs h-9 cursor-pointer"
@@ -227,7 +227,7 @@ export const MyComplaintsPage = () => {
                     </Button>
 
                     <Button
-                      onClick={() => navigate(`/complaints/${complaint.id}/edit`)}
+                      onClick={() => navigate(`/citizen/complaints/${complaint.id}/edit`)}
                       variant={isEditable ? "outline" : "ghost"}
                       size="sm"
                       disabled={!isEditable}

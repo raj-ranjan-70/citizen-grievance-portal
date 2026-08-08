@@ -36,7 +36,9 @@ export const AuthProvider = ({ children }) => {
         if (error.response && error.response.status === 401) {
           setUser(null);
           // Redirect the browser to login if they are currently inside a protected dashboard route
-          if (window.location.pathname.startsWith("/dashboard")) {
+          if (window.location.pathname.startsWith("/citizen/") ||
+              window.location.pathname.startsWith("/officer/") ||
+              window.location.pathname.startsWith("/admin/")) {
             window.location.href = "/login?expired=true";
           }
         }

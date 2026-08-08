@@ -89,7 +89,7 @@ export const CreateComplaintPage = () => {
       setSuccess(true);
       // Wait for a short duration to show success message, then redirect
       setTimeout(() => {
-        navigate("/complaints");
+        navigate("/citizen/complaints");
       }, 1500);
     } catch (err) {
       const message = err.response?.data?.message || "Failed to submit complaint. Please try again.";
@@ -109,7 +109,7 @@ export const CreateComplaintPage = () => {
     <div className="p-4 sm:p-8 max-w-4xl mx-auto">
       {/* Back Button */}
       <button
-        onClick={() => navigate("/complaints")}
+        onClick={() => navigate("/citizen/complaints")}
         className="flex items-center gap-2 text-sm font-semibold text-neutral-600 hover:text-primary transition-colors mb-6 group cursor-pointer"
       >
         <ArrowLeft className="size-4 group-hover:-translate-x-0.5 transition-transform" />
@@ -270,7 +270,7 @@ export const CreateComplaintPage = () => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate("/complaints")}
+                onClick={() => navigate("/citizen/complaints")}
                 disabled={loading || success}
               >
                 Cancel
