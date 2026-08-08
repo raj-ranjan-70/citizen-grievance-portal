@@ -19,8 +19,8 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/complaints")
-@Tag(name = "Complaints", description = "Endpoints for citizens to file and manage their grievances and comments")
+@RequestMapping("/api/v1/citizen/complaints")
+@Tag(name = "Citizen Complaints", description = "Endpoints for authenticated citizens to file and manage their own grievances and comments")
 public class ComplaintController {
 
     private final ComplaintService complaintService;

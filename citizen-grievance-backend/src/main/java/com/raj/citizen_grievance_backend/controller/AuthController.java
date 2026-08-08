@@ -66,9 +66,10 @@ public class AuthController {
         
         UserResponse response = authService.login(request);
         
-        // Custom session management: save user ID in standard HttpSession
+        // Custom session management: save user ID and role in standard HttpSession
         HttpSession session = servletRequest.getSession(true);
         session.setAttribute("userId", response.getId());
+        session.setAttribute("userRole", response.getRole().name());
 
         // Create db-backed session tracking
         authService.createUserSession(session.getId(), response.getId());
@@ -160,8 +161,10 @@ public class AuthController {
                     if ("JSESSIONID".equals(c.getName())) {
                         userId = authService.validateAndRefreshSession(c.getValue());
                         if (userId != null) {
-                            // Synchronize back to http session
-                            servletRequest.getSession(true).setAttribute("userId", userId);
+                            UserResponse restored = authService.getUserById(userId);
+                            HttpSession newSession = servletRequest.getSession(true);
+                            newSession.setAttribute("userId", userId);
+                            newSession.setAttribute("userRole", restored.getRole().name());
                         }
                         break;
                     }

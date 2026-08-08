@@ -3,9 +3,13 @@ import { useAuth } from "@/hooks/useAuth";
 
 /**
  * Route guard for protected/authenticated views.
- * Blocks anonymous access and preserves initial location for post-login redirect.
+ *
+ * - Without `allowedRoles`: blocks anonymous access and redirects to /login.
+ * - With `allowedRoles`: additionally enforces role-based access.
+ *   If the user is authenticated but the wrong role, they are redirected to their
+ *   own home dashboard instead of the login page.
  */
-export const ProtectedRoute = ({ children }) => {
+export const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
 
@@ -24,6 +28,21 @@ export const ProtectedRoute = ({ children }) => {
 
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // Role guard: if allowedRoles are specified and user's role is not in the list,
+  // redirect to their own home dashboard silently.
+  if (allowedRoles && allowedRoles.length > 0) {
+    const userRole = user.role?.toUpperCase();
+    if (!allowedRoles.includes(userRole)) {
+      const roleDashboards = {
+        CITIZEN: "/citizen/dashboard",
+        OFFICER: "/officer/dashboard",
+        ADMIN: "/admin/dashboard",
+      };
+      const redirectTo = roleDashboards[userRole] || "/";
+      return <Navigate to={redirectTo} replace />;
+    }
   }
 
   return <>{children}</>;

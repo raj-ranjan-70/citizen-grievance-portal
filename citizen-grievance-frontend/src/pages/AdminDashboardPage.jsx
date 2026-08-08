@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { adminService } from "@/services/adminService";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,8 @@ import {
 
 export const AdminDashboardPage = () => {
   const [activeTab, setActiveTab] = useState("complaints");
+  const [searchParams] = useSearchParams();
+  const deepLinkComplaintId = searchParams.get("complaintId");
 
   // Data states
   const [complaints, setComplaints] = useState([]);
@@ -64,6 +67,16 @@ export const AdminDashboardPage = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Deep-link: auto-open complaint view modal from notification click (?complaintId=...)
+  useEffect(() => {
+    if (!deepLinkComplaintId || complaints.length === 0) return;
+    const found = complaints.find((c) => c.id === deepLinkComplaintId);
+    if (found) {
+      setViewingComplaint(found);
+      setActiveTab("complaints");
+    }
+  }, [deepLinkComplaintId, complaints]);
 
   const handleAssign = async (e) => {
     e.preventDefault();

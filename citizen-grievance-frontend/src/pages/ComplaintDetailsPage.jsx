@@ -181,7 +181,7 @@ export const ComplaintDetailsPage = () => {
     return (
       <div className="p-4 sm:p-8 max-w-4xl mx-auto space-y-4">
         <button
-          onClick={() => navigate("/complaints")}
+          onClick={() => navigate("/citizen/complaints")}
           className="flex items-center gap-2 text-sm font-semibold text-neutral-600 hover:text-primary transition-colors cursor-pointer"
         >
           <ArrowLeft className="size-4" /> Back to My Complaints
@@ -221,7 +221,7 @@ export const ComplaintDetailsPage = () => {
       {/* Top Bar Navigation */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <button
-          onClick={() => navigate("/complaints")}
+          onClick={() => navigate("/citizen/complaints")}
           className="flex items-center gap-2 text-sm font-semibold text-neutral-600 hover:text-primary transition-colors group cursor-pointer"
         >
           <ArrowLeft className="size-4 group-hover:-translate-x-0.5 transition-transform" />
@@ -230,7 +230,7 @@ export const ComplaintDetailsPage = () => {
 
         {isEditable && (
           <Button
-            onClick={() => navigate(`/complaints/${complaint.id}/edit`)}
+            onClick={() => navigate(`/citizen/complaints/${complaint.id}/edit`)}
             variant="outline"
             className="flex items-center gap-2 self-start sm:self-auto cursor-pointer"
           >

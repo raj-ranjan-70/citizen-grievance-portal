@@ -114,7 +114,7 @@ export const DashboardPage = () => {
         </div>
         <Button
           as={Link}
-          to="/complaints/new"
+          to="/citizen/complaints/new"
           variant="primary"
           className="flex items-center gap-2 self-start sm:self-auto cursor-pointer"
         >
@@ -200,7 +200,7 @@ export const DashboardPage = () => {
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold font-heading text-neutral-900">Recent Complaints</h3>
                 <Link
-                  to="/complaints"
+                  to="/citizen/complaints"
                   className="text-xs font-semibold text-primary hover:underline flex items-center gap-1 p-1 rounded"
                 >
                   View All Grievances
@@ -220,7 +220,7 @@ export const DashboardPage = () => {
                     </div>
                     <Button
                       as={Link}
-                      to="/complaints/new"
+                      to="/citizen/complaints/new"
                       variant="outline"
                       size="sm"
                       className="mt-2 cursor-pointer"
@@ -235,7 +235,7 @@ export const DashboardPage = () => {
                     <Card
                       key={complaint.id}
                       hover
-                      onClick={() => navigate(`/complaints/${complaint.id}`)}
+                      onClick={() => navigate(`/citizen/complaints/${complaint.id}`)}
                       className="border border-neutral-200 bg-white cursor-pointer transition-all"
                     >
                       <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">

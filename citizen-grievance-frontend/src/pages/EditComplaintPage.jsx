@@ -115,7 +115,7 @@ export const EditComplaintPage = () => {
       });
       setSuccess(true);
       setTimeout(() => {
-        navigate(`/complaints/${id}`);
+        navigate(`/citizen/complaints/${id}`);
       }, 1500);
     } catch (err) {
       const message = err.response?.data?.message || "Failed to update complaint. Please try again.";
@@ -145,7 +145,7 @@ export const EditComplaintPage = () => {
     <div className="p-4 sm:p-8 max-w-4xl mx-auto">
       {/* Back Button */}
       <button
-        onClick={() => navigate(`/complaints/${id}`)}
+        onClick={() => navigate(`/citizen/complaints/${id}`)}
         className="flex items-center gap-2 text-sm font-semibold text-neutral-600 hover:text-primary transition-colors mb-6 group cursor-pointer"
       >
         <ArrowLeft className="size-4 group-hover:-translate-x-0.5 transition-transform" />
@@ -319,7 +319,7 @@ export const EditComplaintPage = () => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate(`/complaints/${id}`)}
+                onClick={() => navigate(`/citizen/complaints/${id}`)}
                 disabled={submitting || success}
               >
                 {isEditable ? "Cancel" : "Back"}

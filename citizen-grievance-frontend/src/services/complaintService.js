@@ -16,44 +16,44 @@ const mapComplaintStatus = (complaint) => {
 
 /**
  * Service to manage complaint API requests using the configured Axios client.
- * Connects directly to the Spring Boot complaint REST endpoints.
+ * Connects to the Spring Boot citizen complaint REST endpoints under /api/v1/citizen/complaints.
  */
 export const complaintService = {
   createComplaint: async (data) => {
-    const response = await api.post("/v1/complaints", data);
+    const response = await api.post("/v1/citizen/complaints", data);
     return mapComplaintStatus(response.data.data);
   },
 
   getComplaints: async () => {
-    const response = await api.get("/v1/complaints");
+    const response = await api.get("/v1/citizen/complaints");
     const list = response.data.data || [];
     return list.map(mapComplaintStatus);
   },
 
   getComplaint: async (id) => {
-    const response = await api.get(`/v1/complaints/${id}`);
+    const response = await api.get(`/v1/citizen/complaints/${id}`);
     return mapComplaintStatus(response.data.data);
   },
 
   updateComplaint: async (id, data) => {
-    const response = await api.put(`/v1/complaints/${id}`, data);
+    const response = await api.put(`/v1/citizen/complaints/${id}`, data);
     return mapComplaintStatus(response.data.data);
   },
 
   deleteComplaint: async (id) => {
-    const response = await api.delete(`/v1/complaints/${id}`);
+    const response = await api.delete(`/v1/citizen/complaints/${id}`);
     return response.data.data;
   },
 
   addComment: async (id, commentData) => {
-    const response = await api.post(`/v1/complaints/${id}/comments`, commentData);
+    const response = await api.post(`/v1/citizen/complaints/${id}/comments`, commentData);
     return response.data.data;
   },
 
   uploadImage: async (id, file) => {
     const formData = new FormData();
     formData.append("file", file);
-    const response = await api.post(`/v1/complaints/${id}/images`, formData, {
+    const response = await api.post(`/v1/citizen/complaints/${id}/images`, formData, {
       headers: {
         "Content-Type": "multipart/form-data"
       }

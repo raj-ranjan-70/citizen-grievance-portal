@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { officerService } from "@/services/officerService";
 import { complaintService } from "@/services/complaintService";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,6 +17,8 @@ import {
 
 export const OfficerDashboardPage = () => {
   const [activeTab, setActiveTab] = useState("active");
+  const [searchParams] = useSearchParams();
+  const deepLinkComplaintId = searchParams.get("complaintId");
 
   // Data states
   const [activeComplaints, setActiveComplaints] = useState([]);
@@ -53,6 +56,20 @@ export const OfficerDashboardPage = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Deep-link: auto-open complaint from notification click (?complaintId=...)
+  useEffect(() => {
+    if (!deepLinkComplaintId || activeComplaints.length === 0) return;
+    const found = activeComplaints.find((c) => c.id === deepLinkComplaintId)
+      || historyComplaints.find((c) => c.id === deepLinkComplaintId);
+    if (found) {
+      setSelectedComplaint(found);
+      setActiveModal("view");
+      if (historyComplaints.some((c) => c.id === deepLinkComplaintId)) {
+        setActiveTab("history");
+      }
+    }
+  }, [deepLinkComplaintId, activeComplaints, historyComplaints]);
 
   const handlePostComment = async (e) => {
     e.preventDefault();
