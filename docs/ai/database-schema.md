@@ -45,6 +45,7 @@ Maps to the `Complaint` entity. Stores grievance details filed by citizens.
 | `status` | `VARCHAR(50)` | `NOT NULL` | Life-cycle status: `PENDING`, `ASSIGNED`, `RESOLVED`, `REJECTED`. |
 | `assigned_officer_id`| `BINARY(16)`| `FOREIGN KEY`, `NULLABLE` | Reference to the Officer assigned to address this. |
 | `resolution_image_uuid` | `VARCHAR(255)` | `NULLABLE` | Cloudflare R2 image UUID representing proof of resolution. |
+| `remarks` | `TEXT` | `NULLABLE` | Officer remarks or reason for rejection. |
 | `created_at` | `DATETIME(6)` | `NOT NULL` | Timestamp when the grievance was filed. |
 | `updated_at` | `DATETIME(6)` | `NOT NULL` | Timestamp when last updated. |
 

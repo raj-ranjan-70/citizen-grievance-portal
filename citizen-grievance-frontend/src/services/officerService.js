@@ -33,14 +33,20 @@ export const officerService = {
     return mapComplaintStatus(response.data.data);
   },
 
-  resolveComplaint: async (complaintId, file) => {
+  resolveComplaint: async (complaintId, file, remarks) => {
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("remarks", remarks);
     const response = await api.post(`/v1/officer/complaints/${complaintId}/resolve`, formData, {
       headers: {
         "Content-Type": "multipart/form-data"
       }
     });
+    return mapComplaintStatus(response.data.data);
+  },
+
+  rejectComplaint: async (complaintId, remarks) => {
+    const response = await api.put(`/v1/officer/complaints/${complaintId}/reject`, { remarks });
     return mapComplaintStatus(response.data.data);
   }
 };

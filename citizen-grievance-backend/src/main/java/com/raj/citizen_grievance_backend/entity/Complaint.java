@@ -56,6 +56,9 @@ public class Complaint {
     @Column(name = "resolution_image_uuid")
     private String resolutionImageUuid;
 
+    @Column(name = "remarks", columnDefinition = "TEXT")
+    private String remarks;
+
     @OneToMany(mappedBy = "complaint", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Comment> comments = new ArrayList<>();

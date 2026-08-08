@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { adminService } from "@/services/adminService";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,12 +13,7 @@ import {
   AlertCircle,
   CheckCircle2,
   UserCheck,
-  Shield,
-  Clock,
-  XCircle,
-  Building,
-  Menu,
-  ChevronRight
+  Building
 } from "lucide-react";
 
 export const AdminDashboardPage = () => {
@@ -35,6 +30,7 @@ export const AdminDashboardPage = () => {
   const [selectedOfficerId, setSelectedOfficerId] = useState("");
   const [assignLoading, setAssignLoading] = useState(false);
   const [assignError, setAssignError] = useState("");
+  const [viewingComplaint, setViewingComplaint] = useState(null);
 
   // Create Officer Modal/Form states
   const [showCreateOfficer, setShowCreateOfficer] = useState(false);
@@ -244,18 +240,26 @@ export const AdminDashboardPage = () => {
                               )}
                             </td>
                             <td className="px-6 py-4 text-right">
-                              {c.status === "SUBMITTED" ? (
+                              <div className="flex justify-end items-center gap-2">
                                 <Button
-                                  onClick={() => setSelectedComplaint(c)}
+                                  onClick={() => setViewingComplaint(c)}
                                   variant="outline"
                                   size="sm"
-                                  className="h-8 text-xs cursor-pointer"
+                                  className="h-8 text-xs cursor-pointer text-neutral-600 border-neutral-300 hover:bg-neutral-50 font-semibold"
                                 >
-                                  Assign Officer
+                                  View Details
                                 </Button>
-                              ) : (
-                                <span className="text-xs text-neutral-400 font-medium">Processed</span>
-                              )}
+                                {c.status === "SUBMITTED" && (
+                                  <Button
+                                    onClick={() => setSelectedComplaint(c)}
+                                    variant="primary"
+                                    size="sm"
+                                    className="h-8 text-xs cursor-pointer font-semibold"
+                                  >
+                                    Assign
+                                  </Button>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         ))
@@ -512,6 +516,134 @@ export const AdminDashboardPage = () => {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Admin Complaint View Details Modal */}
+      {viewingComplaint && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm bg-neutral-900/40 animate-fadeIn">
+          <div className="bg-white rounded-lg shadow-xl border border-neutral-200 max-w-2xl w-full flex flex-col max-h-[85vh] overflow-hidden">
+            {/* Header */}
+            <div className="p-6 border-b border-neutral-200 flex items-start justify-between">
+              <div>
+                <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${getStatusBadge(viewingComplaint.status)}`}>
+                  {viewingComplaint.status}
+                </span>
+                <h3 className="text-xl font-bold font-heading text-neutral-900 mt-2">{viewingComplaint.title}</h3>
+                <p className="text-xs text-neutral-500 mt-1">
+                  Filed by <span className="font-semibold text-neutral-800">{viewingComplaint.citizenName}</span> ({viewingComplaint.citizenEmail}) on {new Date(viewingComplaint.createdAt).toLocaleString()}
+                </p>
+              </div>
+              <button
+                onClick={() => setViewingComplaint(null)}
+                className="text-neutral-400 hover:text-neutral-600 focus:outline-none focus:ring-2 focus:ring-primary rounded p-1 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Meta information */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-lg bg-neutral-50 border border-neutral-100 text-xs text-neutral-600">
+                <div>
+                  <p className="text-[10px] text-neutral-400 uppercase tracking-wider">Category</p>
+                  <p className="text-neutral-800 font-bold mt-0.5">{viewingComplaint.category}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-neutral-400 uppercase tracking-wider">Priority</p>
+                  <p className="text-neutral-800 font-bold mt-0.5">{viewingComplaint.priority}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-neutral-400 uppercase tracking-wider">Assigned Officer</p>
+                  <p className="text-neutral-800 font-bold mt-0.5">
+                    {viewingComplaint.assignedOfficerName || "Not assigned yet"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-neutral-400 uppercase tracking-wider">Last Updated</p>
+                  <p className="text-neutral-800 font-medium mt-0.5">
+                    {viewingComplaint.updatedAt ? new Date(viewingComplaint.updatedAt).toLocaleString() : "No updates"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="space-y-1.5">
+                <h4 className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Description</h4>
+                <div className="p-4 bg-neutral-50 rounded-lg text-sm text-neutral-700 leading-relaxed border border-neutral-100 whitespace-pre-wrap">
+                  {viewingComplaint.description}
+                </div>
+              </div>
+
+              {/* Citizen Attachments */}
+              {viewingComplaint.imageUuids && viewingComplaint.imageUuids.length > 0 && (
+                <div className="space-y-1.5">
+                  <h4 className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Citizen Attachments ({viewingComplaint.imageUuids.length})</h4>
+                  <div className="grid grid-cols-3 gap-2">
+                    {viewingComplaint.imageUuids.map((uuid) => (
+                      <a
+                        key={uuid}
+                        href={`${import.meta.env.VITE_R2_PUBLIC_URL}/${uuid}.webp`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block aspect-video rounded-md overflow-hidden border border-neutral-200 bg-neutral-50 hover:opacity-85 transition-opacity"
+                      >
+                        <img
+                          src={`${import.meta.env.VITE_R2_PUBLIC_URL}/${uuid}.webp`}
+                          alt="Attachment"
+                          className="size-full object-cover"
+                        />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Officer Remarks/Proof (If RESOLVED or REJECTED) */}
+              {(viewingComplaint.status === "RESOLVED" || viewingComplaint.status === "REJECTED") && (
+                <div className={`p-4 rounded-lg border space-y-2 ${
+                  viewingComplaint.status === "RESOLVED" ? "bg-success/5 border-success/20" : "bg-error/5 border-error/20"
+                }`}>
+                  <h4 className={`text-xs font-bold uppercase tracking-wider ${
+                    viewingComplaint.status === "RESOLVED" ? "text-success" : "text-error"
+                  }`}>
+                    {viewingComplaint.status === "RESOLVED" ? "Resolution Details / Remarks" : "Reason for Rejection"}
+                  </h4>
+                  {viewingComplaint.remarks && (
+                    <p className="text-sm text-neutral-800 leading-relaxed whitespace-pre-wrap font-medium">{viewingComplaint.remarks}</p>
+                  )}
+                  {viewingComplaint.status === "RESOLVED" && viewingComplaint.resolutionImageUuid && (
+                    <div className="max-w-xs aspect-video rounded-md overflow-hidden border border-neutral-200 mt-2">
+                      <a
+                        href={`${import.meta.env.VITE_R2_PUBLIC_URL}/${viewingComplaint.resolutionImageUuid}.webp`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block size-full"
+                      >
+                        <img
+                          src={`${import.meta.env.VITE_R2_PUBLIC_URL}/${viewingComplaint.resolutionImageUuid}.webp`}
+                          alt="Proof of resolution"
+                          className="size-full object-cover"
+                        />
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 border-t border-neutral-200 bg-neutral-50/50 flex justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setViewingComplaint(null)}
+              >
+                Close
+              </Button>
+            </div>
           </div>
         </div>
       )}

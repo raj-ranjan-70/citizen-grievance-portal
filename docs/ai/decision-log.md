@@ -47,5 +47,11 @@
 - **Rationale:** Supports attaching multiple visual records to citizen grievances to facilitate investigations and mandates proof of resolution images from officers. Converting to WebP and compressing images reduces bandwidth overhead and optimizes storage.
 - **Technical Details:** The `StorageService` enforces a <5MB size limit and content-type checks, resizes to a max of 1200x1200px using `Thumbnailator`, converts to WebP via `ImageIO` (utilizing `webp-imageio` plugin), and uploads to R2 using path-style addressing. The React client integrates `react-dropzone` for drag-and-drop citizen uploads and uses native inputs for officer proof uploads.
 
+## 12. UI/UX Improvements & Feedback Remarks (Phase 6)
+- **Decision:** Introduce a dedicated `remarks` field in the database complaints table, create reject and updated resolve endpoints, restrict global navigation links for logged-in sessions, show success toasts on upload, and provide dedicated action modals.
+- **Rationale:** Aligns with requirements to ensure officers provide descriptive rejection reasons and resolution details to citizens, keeps navigation focused during active sessions, and simplifies status updates.
+- **Technical Details:** The `remarks` text field is updated on status changes. The React Navbar hides public links when the user is logged in. Upload alerts show transient toast overlays. Officer actions are split into distinct View, Resolve, and Reject modals. Admin detail inspect screens render all metadata, attached images, comments, and resolution proof.
+
+
 
 

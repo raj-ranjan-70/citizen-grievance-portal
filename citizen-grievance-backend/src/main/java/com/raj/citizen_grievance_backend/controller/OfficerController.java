@@ -2,6 +2,7 @@ package com.raj.citizen_grievance_backend.controller;
 
 import com.raj.citizen_grievance_backend.dto.ApiResponse;
 import com.raj.citizen_grievance_backend.dto.ComplaintResponse;
+import com.raj.citizen_grievance_backend.dto.RejectComplaintRequest;
 import com.raj.citizen_grievance_backend.dto.UpdateComplaintStatusRequest;
 import com.raj.citizen_grievance_backend.exception.UnauthorizedException;
 import com.raj.citizen_grievance_backend.service.OfficerService;
@@ -113,15 +114,15 @@ public class OfficerController {
     }
 
     @PostMapping(value = "/complaints/{id}/resolve", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "Resolve complaint with proof image", description = "Allows an assigned officer to mark a complaint as RESOLVED by uploading a proof image")
+    @Operation(summary = "Resolve complaint with proof image and remarks", description = "Allows an assigned officer to mark a complaint as RESOLVED by uploading a proof image and entering remarks")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Complaint resolved successfully",
                     content = @Content(schema = @Schema(implementation = ApiResponse.class))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Missing upload image or invalid file",
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Missing upload image or remarks",
                     content = @Content(schema = @Schema(implementation = ApiResponse.class))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Not authenticated",
                     content = @Content(schema = @Schema(implementation = ApiResponse.class))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Access denied: complaint belongs to another officer or not authorized role",
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Access denied: complaint belongs to another officer",
                     content = @Content(schema = @Schema(implementation = ApiResponse.class))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Complaint not found",
                     content = @Content(schema = @Schema(implementation = ApiResponse.class)))
@@ -129,18 +130,52 @@ public class OfficerController {
     public ResponseEntity<ApiResponse<ComplaintResponse>> resolveComplaint(
             @PathVariable UUID id,
             @RequestParam(value = "file", required = false) org.springframework.web.multipart.MultipartFile file,
+            @RequestParam(value = "remarks", required = false) String remarks,
             HttpServletRequest servletRequest) {
 
         if (file == null || file.isEmpty()) {
             throw new com.raj.citizen_grievance_backend.exception.BadRequestException("Proof of resolution image is mandatory");
         }
+        if (remarks == null || remarks.trim().isEmpty()) {
+            throw new com.raj.citizen_grievance_backend.exception.BadRequestException("Resolution remarks are mandatory");
+        }
 
         UUID officerId = getAuthenticatedUserId(servletRequest);
-        ComplaintResponse response = officerService.resolveComplaint(id, file, officerId);
+        ComplaintResponse response = officerService.resolveComplaint(id, file, remarks, officerId);
 
         ApiResponse<ComplaintResponse> apiResponse = ApiResponse.<ComplaintResponse>builder()
                 .success(true)
                 .message("Complaint resolved successfully")
+                .data(response)
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @PutMapping("/complaints/{id}/reject")
+    @Operation(summary = "Reject complaint with remarks", description = "Allows an assigned officer to reject a complaint by providing remarks")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Complaint rejected successfully",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Remarks cannot be empty",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Not authenticated",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Access denied: complaint belongs to another officer",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Complaint not found",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+    })
+    public ResponseEntity<ApiResponse<ComplaintResponse>> rejectComplaint(
+            @PathVariable UUID id,
+            @Valid @RequestBody RejectComplaintRequest request,
+            HttpServletRequest servletRequest) {
+
+        UUID officerId = getAuthenticatedUserId(servletRequest);
+        ComplaintResponse response = officerService.rejectComplaint(id, request.getRemarks(), officerId);
+
+        ApiResponse<ComplaintResponse> apiResponse = ApiResponse.<ComplaintResponse>builder()
+                .success(true)
+                .message("Complaint rejected successfully")
                 .data(response)
                 .build();
         return ResponseEntity.ok(apiResponse);

@@ -60,4 +60,7 @@ public class ComplaintResponse {
 
     @Schema(description = "UUID of the proof image uploaded by the officer upon resolution", example = "f9c98765-4321-4321-4321-432143214321")
     private String resolutionImageUuid;
+
+    @Schema(description = "Officer remarks or reason for rejection", example = "The pipeline has been fixed and tested.")
+    private String remarks;
 }

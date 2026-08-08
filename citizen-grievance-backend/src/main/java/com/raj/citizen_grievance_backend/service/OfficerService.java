@@ -94,11 +94,14 @@ public class OfficerService {
     }
 
     @Transactional
-    public ComplaintResponse resolveComplaint(UUID complaintId, org.springframework.web.multipart.MultipartFile file, UUID officerId) {
+    public ComplaintResponse resolveComplaint(UUID complaintId, org.springframework.web.multipart.MultipartFile file, String remarks, UUID officerId) {
         verifyOfficer(officerId);
 
         if (file == null || file.isEmpty()) {
             throw new BadRequestException("Proof of resolution image is mandatory");
+        }
+        if (remarks == null || remarks.trim().isEmpty()) {
+            throw new BadRequestException("Resolution remarks are mandatory");
         }
 
         Complaint complaint = complaintRepository.findById(complaintId)
@@ -110,7 +113,30 @@ public class OfficerService {
 
         String imageUuid = storageService.uploadImage(file);
         complaint.setResolutionImageUuid(imageUuid);
+        complaint.setRemarks(remarks.trim());
         complaint.setStatus(ComplaintStatus.RESOLVED);
+
+        Complaint savedComplaint = complaintRepository.save(complaint);
+        return mapToComplaintResponse(savedComplaint);
+    }
+
+    @Transactional
+    public ComplaintResponse rejectComplaint(UUID complaintId, String remarks, UUID officerId) {
+        verifyOfficer(officerId);
+
+        if (remarks == null || remarks.trim().isEmpty()) {
+            throw new BadRequestException("Rejection remarks are mandatory");
+        }
+
+        Complaint complaint = complaintRepository.findById(complaintId)
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with ID: " + complaintId));
+
+        if (complaint.getAssignedOfficer() == null || !complaint.getAssignedOfficer().getId().equals(officerId)) {
+            throw new ForbiddenException("Access Denied: This complaint is not assigned to you");
+        }
+
+        complaint.setRemarks(remarks.trim());
+        complaint.setStatus(ComplaintStatus.REJECTED);
 
         Complaint savedComplaint = complaintRepository.save(complaint);
         return mapToComplaintResponse(savedComplaint);
@@ -148,6 +174,7 @@ public class OfficerService {
                 .comments(comments)
                 .imageUuids(imageUuids)
                 .resolutionImageUuid(complaint.getResolutionImageUuid())
+                .remarks(complaint.getRemarks())
                 .build();
     }
 }

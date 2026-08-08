@@ -18,11 +18,32 @@ export const Navbar = React.forwardRef(({
 }, ref) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const navLinks = [
-    { name: "Home", href: "/" },
-    { name: "Features", href: "#features" },
-    { name: "About", href: "#about" },
-  ];
+  const getNavLinks = () => {
+    if (!user) {
+      return [
+        { name: "Home", href: "/" },
+        { name: "Features", href: "#features" },
+        { name: "About", href: "#about" },
+      ];
+    }
+    const role = user.role?.toUpperCase();
+    if (role === "ADMIN") {
+      return [{ name: "Dashboard", href: "/admin/dashboard" }];
+    }
+    if (role === "OFFICER") {
+      return [{ name: "Dashboard", href: "/officer/dashboard" }];
+    }
+    if (role === "CITIZEN") {
+      return [
+        { name: "Dashboard", href: "/citizen/dashboard" },
+        { name: "My Complaints", href: "/complaints" },
+        { name: "New Complaint", href: "/complaints/new" }
+      ];
+    }
+    return [];
+  };
+
+  const navLinks = getNavLinks();
 
   return (
     <header
@@ -36,7 +57,7 @@ export const Navbar = React.forwardRef(({
       <Container size="lg">
         <div className="flex h-16 items-center justify-between">
           {/* Logo & Portal Identity */}
-          <Link to="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
+          <Link to={user ? (user.role?.toUpperCase() === "ADMIN" ? "/admin/dashboard" : user.role?.toUpperCase() === "OFFICER" ? "/officer/dashboard" : "/citizen/dashboard") : "/"} className="flex items-center gap-2 hover:opacity-90 transition-opacity">
             <Landmark
               className="size-6 text-primary shrink-0"
               aria-hidden="true"
@@ -54,20 +75,36 @@ export const Navbar = React.forwardRef(({
             className="hidden md:flex items-center gap-6"
             aria-label="Global Navigation"
           >
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                className={cn(
-                  "text-sm font-medium transition-colors hover:text-primary py-5 -mb-[1px]",
-                  link.name === activeLink
-                    ? "text-primary border-b-2 border-primary"
-                    : "text-neutral-600"
-                )}
-              >
-                {link.name}
-              </a>
-            ))}
+            {navLinks.map((link) => {
+              const isAnchor = link.href.startsWith("#");
+              return isAnchor ? (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  className={cn(
+                    "text-sm font-medium transition-colors hover:text-primary py-5 -mb-[1px]",
+                    link.name === activeLink
+                      ? "text-primary border-b-2 border-primary"
+                      : "text-neutral-600"
+                  )}
+                >
+                  {link.name}
+                </a>
+              ) : (
+                <Link
+                  key={link.name}
+                  to={link.href}
+                  className={cn(
+                    "text-sm font-medium transition-colors hover:text-primary py-5 -mb-[1px]",
+                    link.name === activeLink || (link.name === "Dashboard" && activeLink === "Home")
+                      ? "text-primary border-b-2 border-primary"
+                      : "text-neutral-600"
+                  )}
+                >
+                  {link.name}
+                </Link>
+              );
+            })}
           </nav>
 
           {/* User Actions / Notification bell */}

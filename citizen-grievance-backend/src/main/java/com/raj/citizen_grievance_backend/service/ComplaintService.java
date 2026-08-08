@@ -40,6 +40,10 @@ public class ComplaintService {
         User citizen = userRepository.findById(citizenId)
                 .orElseThrow(() -> new UnauthorizedException("User not found"));
 
+        if (citizen.getRole() != com.raj.citizen_grievance_backend.entity.Role.CITIZEN) {
+            throw new ForbiddenException("Only citizens can create complaints");
+        }
+
         Complaint complaint = Complaint.builder()
                 .citizen(citizen)
                 .title(request.getTitle())
@@ -132,9 +136,9 @@ public class ComplaintService {
 
         complaintImageRepository.save(complaintImage);
 
-        // Fetch again to have the new image mapped
-        complaint = complaintRepository.findById(complaintId)
-                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found"));
+        if (complaint.getImages() != null) {
+            complaint.getImages().add(complaintImage);
+        }
 
         return mapToResponse(complaint);
     }
@@ -190,6 +194,7 @@ public class ComplaintService {
                 .comments(comments)
                 .imageUuids(imageUuids)
                 .resolutionImageUuid(complaint.getResolutionImageUuid())
+                .remarks(complaint.getRemarks())
                 .build();
     }
 

@@ -1,20 +1,22 @@
-# Session Handoff - Citizen Grievance Portal (Phase 5 Complete)
+# Session Handoff - Citizen Grievance Portal (Phase 6 Complete)
 
 ## Completed in Current Session
-- **Phase 5 Image Upload Pipeline & Cloudflare R2 Integration:**
-  - Created git branch `feature/image-upload-r2-pipeline`.
-  - Built `S3ClientConfig` config and `StorageService` using AWS SDK v2, Thumbnailator, and WebP conversion via `ImageIO` (with `webp-imageio`).
-  - Added new `ComplaintImage` entity and repository `ComplaintImageRepository`.
-  - Updated `Complaint` entity to support citizen-uploaded images and officer resolution proof image UUIDs.
-  - Configured Swagger documentation and mappings on `ComplaintResponse` DTO.
-  - Integrated Citizen endpoints (`/api/v1/complaints/{id}/images`) and Officer endpoints (`/api/v1/officer/complaints/{id}/resolve`) to handle multi-part uploads with session authentication guards.
-  - Verified backend compilation (`mvn clean compile` succeeded).
-  - Configured frontend services (`complaintService.js` and `officerService.js`) to submit file uploads via `FormData`.
-  - Integrated `react-dropzone` for drag-and-drop citizen grievance attachments and updated dashboard details view.
-  - Forced image proof requirements in the Officer resolution workflow in `OfficerDashboardPage.jsx` and added history views.
-  - Verified frontend production builds (`npm run build` succeeded) and ESLint checks.
-  - Staged all files.
+- **Phase 6: UI/UX Improvements & Feedback Mechanisms**
+  - Checked out the feature branch `feature/ui-ux-feedback-remediation`.
+  - Added a nullable text column `remarks` to the `Complaint` entity to store resolution details or rejection reasons.
+  - Created `RejectComplaintRequest` DTO and updated `ComplaintResponse` DTO to expose the new `remarks` field with OpenAPI documentation.
+  - Implemented the reject PUT endpoint (`PUT /api/v1/officer/complaints/{id}/reject`) in `OfficerController.java` and `OfficerService.java`, enforcing validation checks.
+  - Updated the resolve POST endpoint (`POST /api/v1/officer/complaints/{id}/resolve`) to require both an image file and remarks.
+  - Checked that the backend compiles cleanly (`mvn clean compile` succeeded).
+  - Modified the frontend `officerService.js` to send resolution remarks and support rejections.
+  - Updated the global React navigation bar in `navbar.jsx` to restrict visibility to dashboard links for active sessions, hiding public landing pages.
+  - Refactored `ComplaintDetailsPage.jsx` to display a toast notification upon citizen image uploads, append uploaded images to state without reloads, and present the officer's feedback summary banner.
+  - Redesigned `OfficerDashboardPage.jsx` active assignments to offer three distinct buttons (View, Resolve, Reject) mapping to dedicated modals and form payloads.
+  - Built an Administrative details inspector modal in `AdminDashboardPage.jsx` showing full citizen attachment grids, comments history, and resolution remarks/proof.
+  - Verified that the production Vite build is fully operational (`npm run build` completed successfully).
+  - Updated the database schema and decision log files.
 
 ## Next Steps
-- Commit the Phase 5 changes on `feature/image-upload-r2-pipeline` and merge them.
-- Proceed to any remaining verification checks.
+- Commit the Phase 6 changes on branch `feature/ui-ux-feedback-remediation`.
+- Merge the branch into `master`.
+- Perform any final staging/production verification.

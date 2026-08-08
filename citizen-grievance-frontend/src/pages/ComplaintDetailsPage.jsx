@@ -34,6 +34,14 @@ export const ComplaintDetailsPage = () => {
   // Image Upload states
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [toastMessage, setToastMessage] = useState(null);
+
+  const showToast = (message, type = "success") => {
+    setToastMessage({ message, type });
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 4000);
+  };
 
   const onDrop = async (acceptedFiles) => {
     if (acceptedFiles.length === 0) return;
@@ -41,11 +49,16 @@ export const ComplaintDetailsPage = () => {
     setUploadError("");
     try {
       for (const file of acceptedFiles) {
-        const updated = await complaintService.uploadImage(id, file);
-        setComplaint(updated);
+        await complaintService.uploadImage(id, file);
       }
+      // Refetch the complaint details to guarantee all images are updated and displayed immediately
+      const refreshed = await complaintService.getComplaint(id);
+      setComplaint(refreshed);
+      showToast("Attachment(s) uploaded successfully!", "success");
     } catch (err) {
-      setUploadError(err.response?.data?.message || "Failed to upload image. Please check file format and size.");
+      const msg = err.response?.data?.message || "Failed to upload image. Please check file format and size.";
+      setUploadError(msg);
+      showToast(msg, "error");
     } finally {
       setUploading(false);
     }
@@ -189,6 +202,22 @@ export const ComplaintDetailsPage = () => {
 
   return (
     <div className="p-4 sm:p-8 max-w-4xl mx-auto space-y-6">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg border text-sm font-semibold animate-slideIn ${
+          toastMessage.type === "success" 
+            ? "bg-success/10 border-success/35 text-success bg-white" 
+            : "bg-error/10 border-error/35 text-error bg-white"
+        }`}>
+          {toastMessage.type === "success" ? (
+            <CheckCircle className="size-4 shrink-0 text-success" />
+          ) : (
+            <AlertCircle className="size-4 shrink-0 text-error" />
+          )}
+          <span>{toastMessage.message}</span>
+        </div>
+      )}
+
       {/* Top Bar Navigation */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <button
@@ -265,6 +294,22 @@ export const ComplaintDetailsPage = () => {
               </div>
             </div>
           </div>
+
+          {/* Officer Remarks Banner */}
+          {((complaint.status === "RESOLVED" || complaint.status === "REJECTED") && complaint.remarks) && (
+            <div className={`p-5 rounded-lg border flex flex-col gap-2 ${
+              complaint.status === "RESOLVED" 
+                ? "bg-success/5 border-success/20 text-neutral-800" 
+                : "bg-error/5 border-error/20 text-neutral-800"
+            }`}>
+              <h3 className={`text-xs font-bold uppercase tracking-wider ${
+                complaint.status === "RESOLVED" ? "text-success" : "text-error"
+              }`}>
+                {complaint.status === "RESOLVED" ? "Resolution Summary / Officer Remarks" : "Reason for Rejection"}
+              </h3>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap font-body">{complaint.remarks}</p>
+            </div>
+          )}
 
           {/* Description Block */}
           <div className="space-y-2 pt-2">
