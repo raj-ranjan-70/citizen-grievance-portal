@@ -17,6 +17,7 @@ import { ComplaintDetailsPage } from "@/pages/ComplaintDetailsPage";
 import { EditComplaintPage } from "@/pages/EditComplaintPage";
 import { AdminDashboardPage } from "@/pages/AdminDashboardPage";
 import { OfficerDashboardPage } from "@/pages/OfficerDashboardPage";
+import { OfficerComplaintDetailPage } from "@/pages/OfficerComplaintDetailPage";
 
 
 function App() {
@@ -72,6 +73,7 @@ function App() {
             }
           >
             <Route path="/officer/dashboard" element={<OfficerDashboardPage />} />
+            <Route path="/officer/complaints/:id" element={<OfficerComplaintDetailPage />} />
           </Route>
 
           {/* ADMIN Protected Routes */}

@@ -28,6 +28,9 @@ public class CommentResponse {
     @Schema(description = "Role of the author", example = "OFFICER")
     private String authorRole;
 
+    @Schema(description = "UUID of the author of the comment", example = "a2f96115-c224-42b7-84fe-19a3b6118f92")
+    private UUID authorId;
+
     @Schema(description = "Time when the comment was posted", example = "2026-08-07T11:47:00")
     private LocalDateTime createdAt;
 }

@@ -154,12 +154,13 @@ export const Navbar = React.forwardRef(({
                                 setDropdownOpen(false);
                                 if (n.relatedComplaintId) {
                                   const role = (authUser?.role || user?.role)?.toUpperCase();
+                                  const focusParams = n.targetEntityId ? `?focusId=${n.targetEntityId}&type=${n.type || ""}` : "";
                                   if (role === "CITIZEN") {
-                                    navigate(`/citizen/complaints/${n.relatedComplaintId}`);
+                                    navigate(`/citizen/complaints/${n.relatedComplaintId}${focusParams}`);
                                   } else if (role === "OFFICER") {
-                                    navigate(`/officer/dashboard?complaintId=${n.relatedComplaintId}`);
+                                    navigate(`/officer/complaints/${n.relatedComplaintId}${focusParams}`);
                                   } else if (role === "ADMIN") {
-                                    navigate(`/admin/dashboard?complaintId=${n.relatedComplaintId}`);
+                                    navigate(`/admin/dashboard?complaintId=${n.relatedComplaintId}${n.targetEntityId ? `&focusId=${n.targetEntityId}&type=${n.type || ""}` : ""}`);
                                   }
                                 }
                               }}

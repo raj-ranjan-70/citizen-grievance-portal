@@ -169,7 +169,7 @@ class OfficerIntegrationTest {
                 .category("Roads & Infrastructure")
                 .priority("HIGH")
                 .build();
-        MvcResult compRes = mockMvc.perform(post("/api/v1/complaints")
+        MvcResult compRes = mockMvc.perform(post("/api/v1/citizen/complaints")
                         .cookie(citizenCookie)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(compReq)))
@@ -257,13 +257,13 @@ class OfficerIntegrationTest {
                 .content("Comment from unrelated officer.")
                 .build();
 
-        mockMvc.perform(post("/api/v1/complaints/" + citizenComplaintId + "/comments")
+        mockMvc.perform(post("/api/v1/officer/complaints/" + citizenComplaintId + "/comments")
                         .cookie(otherOfficerCookie)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(commentReq)))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("You do not have permission to comment on this complaint"));
+                .andExpect(jsonPath("$.message").value("Access Denied: This complaint is not assigned to you"));
     }
 
     @Test
@@ -273,7 +273,7 @@ class OfficerIntegrationTest {
                 .content("We are dispatching crew immediately.")
                 .build();
 
-        mockMvc.perform(post("/api/v1/complaints/" + citizenComplaintId + "/comments")
+        mockMvc.perform(post("/api/v1/officer/complaints/" + citizenComplaintId + "/comments")
                         .cookie(officerCookie)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(commentReq)))

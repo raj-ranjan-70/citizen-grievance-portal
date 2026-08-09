@@ -15,6 +15,9 @@ import java.time.LocalDateTime;
 @Schema(description = "Response payload representing details of an uploaded complaint image")
 public class ComplaintImageResponse {
 
+    @Schema(description = "Unique identifier / UUID of the image record", example = "a2f96115-c224-42b7-84fe-19a3b6118f92")
+    private java.util.UUID id;
+
     @Schema(description = "Unique identifier / UUID of the image stored in R2", example = "e1b12345-1234-1234-1234-123412341234")
     private String imageUuid;
 

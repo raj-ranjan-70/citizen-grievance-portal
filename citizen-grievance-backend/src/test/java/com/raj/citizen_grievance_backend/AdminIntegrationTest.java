@@ -146,7 +146,7 @@ class AdminIntegrationTest {
                 .priority("HIGH")
                 .build();
 
-        MvcResult compResult = mockMvc.perform(post("/api/v1/complaints")
+        MvcResult compResult = mockMvc.perform(post("/api/v1/citizen/complaints")
                         .cookie(citizenCookie)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))

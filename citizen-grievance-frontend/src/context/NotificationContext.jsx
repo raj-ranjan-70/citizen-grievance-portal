@@ -33,18 +33,32 @@ export const NotificationProvider = ({ children }) => {
       if (path.startsWith("http")) return path;
       return `${window.location.origin}${path}`;
     };
-    const streamURL = `${getAbsoluteURL(apiBase)}/notifications/subscribe`;
+    const streamURL = `${getAbsoluteURL(apiBase)}/v1/notifications/subscribe`;
 
     const eventSource = new EventSource(streamURL, { withCredentials: true });
 
     eventSource.addEventListener("notification", (event) => {
       try {
         const newNotification = JSON.parse(event.data);
-        setNotifications((prev) => [newNotification, ...prev]);
+        
+        // Extract currently viewed complaint ID from pathname
+        const path = window.location.pathname;
+        const matches = path.match(/\/(citizen|officer)\/complaints\/([a-f0-9-]+)/i);
+        const openComplaintId = matches ? matches[2] : null;
 
-        // Dispatch a custom event on window for live sync across views
-        const customEvent = new CustomEvent("live-notification", { detail: newNotification });
-        window.dispatchEvent(customEvent);
+        if (newNotification.relatedComplaintId && newNotification.relatedComplaintId === openComplaintId) {
+          // Dispatch live-sync event so page updates silently
+          const customEvent = new CustomEvent("live-notification", { detail: newNotification });
+          window.dispatchEvent(customEvent);
+
+          // Mark it read in the background immediately on the server
+          notificationService.markAsRead(newNotification.id).catch(console.error);
+        } else {
+          // Standard flow: add to unread list and dispatch event
+          setNotifications((prev) => [newNotification, ...prev]);
+          const customEvent = new CustomEvent("live-notification", { detail: newNotification });
+          window.dispatchEvent(customEvent);
+        }
       } catch (err) {
         console.error("Failed to parse push notification message", err);
       }

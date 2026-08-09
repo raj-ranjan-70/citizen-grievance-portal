@@ -68,3 +68,18 @@
 ## 16. Role-Prefixed GET Endpoints for Officer and Admin
 - **Decision:** Expose GET /api/v1/officer/complaints/{id} and GET /api/v1/admin/complaints/{id} endpoints.
 - **Rationale:** Ensures that the RoleAuthInterceptor can enforce proper access rules while allowing the frontend to fetch complete up-to-date single-complaint details for modals.
+
+## 17. Full-Page Details Routing for Citizens and Officers
+- **Decision:** Map /citizen/complaints/:id to ComplaintDetailsPage and /officer/complaints/:id to OfficerComplaintDetailPage, replacing detail modals for officers.
+- **Rationale:** Overhauls the grievance inspection workflow, giving municipal officers and citizens a spacious, focused view of description metadata and comment timelines.
+- **Technical Details:** Fixed Back button at the top-left using useNavigate(-1) supports intuitive navigation.
+
+## 18. URL-Based Deep Link Target Focusing and Highlighting
+- **Decision:** Pass focusId and type query parameters, capture them via useSearchParams on details load, and scroll/highlight the target element.
+- **Rationale:** Ensures that when a user clicks a notification (comment or image upload) in the dropdown, the detail page automatically scrolls to the exact block and highlights it.
+- **Technical Details:** Elements are bound to Refs and scrolled using .scrollIntoView({ behavior: 'smooth', block: 'center' }). The element receives a temporary highlight state cleared after 2000ms.
+
+## 19. Viewport-Aware Notification Suppression
+- **Decision:** Compare incoming notification's relatedComplaintId with the active page URL in NotificationContext, and observe chat thread visibility using IntersectionObserver.
+- **Rationale:** Prevents annoying alert popups or unread count increments when the user is already on the relevant grievance page, but alerts them with a floating badge if they are scrolled away.
+- **Technical Details:** Matching pathname IDs suppresses the unread badge state and triggers background read receipt calls. The details pages utilize IntersectionObserver on the chat container; if it is out of view, a floating "New comment below" button is rendered.

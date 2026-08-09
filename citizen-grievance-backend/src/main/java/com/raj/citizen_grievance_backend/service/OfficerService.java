@@ -9,6 +9,7 @@ import com.raj.citizen_grievance_backend.entity.Complaint;
 import com.raj.citizen_grievance_backend.entity.ComplaintStatus;
 import com.raj.citizen_grievance_backend.entity.Role;
 import com.raj.citizen_grievance_backend.entity.User;
+import com.raj.citizen_grievance_backend.entity.NotificationType;
 import com.raj.citizen_grievance_backend.exception.BadRequestException;
 import com.raj.citizen_grievance_backend.exception.ForbiddenException;
 import com.raj.citizen_grievance_backend.exception.ResourceNotFoundException;
@@ -101,7 +102,9 @@ public class OfficerService {
         notificationService.sendNotification(
             savedComplaint.getCitizen().getId(),
             "Your complaint status has changed to " + newStatus + ": " + savedComplaint.getTitle(),
-            savedComplaint.getId()
+            savedComplaint.getId(),
+            NotificationType.STATUS,
+            null
         );
 
         return mapToComplaintResponse(savedComplaint);
@@ -136,7 +139,9 @@ public class OfficerService {
         notificationService.sendNotification(
             savedComplaint.getCitizen().getId(),
             "Your complaint has been RESOLVED: " + savedComplaint.getTitle(),
-            savedComplaint.getId()
+            savedComplaint.getId(),
+            NotificationType.STATUS,
+            null
         );
 
         return mapToComplaintResponse(savedComplaint);
@@ -166,7 +171,9 @@ public class OfficerService {
         notificationService.sendNotification(
             savedComplaint.getCitizen().getId(),
             "Your complaint has been REJECTED: " + savedComplaint.getTitle(),
-            savedComplaint.getId()
+            savedComplaint.getId(),
+            NotificationType.STATUS,
+            null
         );
 
         return mapToComplaintResponse(savedComplaint);
@@ -198,7 +205,9 @@ public class OfficerService {
         notificationService.sendNotification(
             complaint.getCitizen().getId(),
             author.getName() + " commented on: " + complaint.getTitle(),
-            complaint.getId()
+            complaint.getId(),
+            NotificationType.COMMENT,
+            savedComment.getId()
         );
 
         return CommentResponse.builder()
@@ -216,6 +225,7 @@ public class OfficerService {
                 .content(comment.getContent())
                 .authorName(comment.getAuthor().getName())
                 .authorRole(comment.getAuthor().getRole().name())
+                .authorId(comment.getAuthor().getId())
                 .createdAt(comment.getCreatedAt())
                 .build();
     }
@@ -240,6 +250,7 @@ public class OfficerService {
         List<ComplaintImageResponse> imageDetails = complaint.getImages() != null ?
                 complaint.getImages().stream()
                         .map(img -> ComplaintImageResponse.builder()
+                                .id(img.getId())
                                 .imageUuid(img.getImageUuid())
                                 .uploadedAt(img.getUploadedAt())
                                 .build())

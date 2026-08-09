@@ -14,4 +14,7 @@
 - **Issue:** Deep linking from notifications or live sync would fail for Officers and Admins because there was no GET endpoint to retrieve details for a single complaint.
 - **Cause:** The original design only exposed GET /api/v1/citizen/complaints/{id}.
 - **Fix:** Added GET /api/v1/officer/complaints/{id} and GET /api/v1/admin/complaints/{id} with proper authorization checks.
-
+## 4. Missing Explicit Imports in Service Classes
+- **Issue:** Backend compilation failed during refactoring due to undefined symbol `NotificationType`.
+- **Cause:** While some services imported `com.raj.citizen_grievance_backend.entity.*`, `OfficerService.java` used individual explicit imports for entities and was missing `NotificationType`.
+- **Fix:** Added `import com.raj.citizen_grievance_backend.entity.NotificationType;` explicitly to resolve compile error.

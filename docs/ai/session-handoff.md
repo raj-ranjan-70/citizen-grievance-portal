@@ -1,48 +1,31 @@
-# Session Handoff — Phase 9: Officer Comments & Layout Refactoring
+# Session Handoff — Phase 10: Real-Time Receipts, Live Modal Sync, and New Indicators
 
 ## Status: COMPLETE ✅
 
 ## What Was Accomplished
 
-### Branch
-`feature/officer-comments-layout-fixes` — **not yet merged to develop/main**. Suggest merging after manual QA.
+### Git Branch
+Merged `feature/realtime-receipts-live-sync` into `master` branch.
 
-### Backend Changes & Bug Fixes
-1. **[OfficerService.java](file:///c:/Users/rajra/Desktop/personal-projects/citizen-grievance-portal/citizen-grievance-backend/src/main/java/com/raj/citizen_grievance_backend/service/OfficerService.java)**:
-   - Added `addComment(UUID complaintId, CommentRequest request, UUID officerId)` with `verifyOfficer` checks.
-   - Validates that the complaint is assigned to the commenting officer (otherwise throws 403 Forbidden).
-   - Automatically posts real-time alerts to the citizen owner.
-2. **[OfficerController.java](file:///c:/Users/rajra/Desktop/personal-projects/citizen-grievance-portal/citizen-grievance-backend/src/main/java/com/raj/citizen_grievance_backend/controller/OfficerController.java)**:
-   - Exposed `POST /api/v1/officer/complaints/{id}/comments` with Swagger/OpenAPI annotations (fixed the Bug 1 route mapping mismatch `/complaints/{id}/comments`).
+### Backend Changes
+1. Added citizenLastViewedAt and officerLastViewedAt columns to Complaint entity.
+2. Added assignedOfficerDepartment, citizenLastViewedAt, officerLastViewedAt, and imageDetails fields to ComplaintResponse.
+3. Created PUT /api/v1/complaints/{id}/view endpoint in GeneralComplaintController to update viewed timestamps based on session user role.
+4. Exposed GET /api/v1/officer/complaints/{id} and GET /api/v1/admin/complaints/{id} to load details for a single complaint.
+5. Registered complaints general path under AuthInterceptor in WebConfig.
 
-### Frontend Changes & Bug Fixes
-3. **[complaintService.js](file:///c:/Users/rajra/Desktop/personal-projects/citizen-grievance-portal/citizen-grievance-frontend/src/services/complaintService.js)**:
-   - Updated `addComment` to dynamically path-prefix either `/v1/officer/...` or `/v1/citizen/...` based on the user's role parameter.
-4. **[ComplaintDetailsPage.jsx](file:///c:/Users/rajra/Desktop/personal-projects/citizen-grievance-portal/citizen-grievance-frontend/src/pages/ComplaintDetailsPage.jsx)** & **[OfficerDashboardPage.jsx](file:///c:/Users/rajra/Desktop/personal-projects/citizen-grievance-portal/citizen-grievance-frontend/src/pages/OfficerDashboardPage.jsx)**:
-   - Integrated `useAuth` to retrieve the logged-in user's role and forward it to `addComment`.
-5. **[navbar.jsx](file:///c:/Users/rajra/Desktop/personal-projects/citizen-grievance-portal/citizen-grievance-frontend/src/components/layout/navbar.jsx)**:
-   - Cleaned up Navbar by removing application/dashboard navigation links when authenticated.
-   - Profile Actions and Sign Out remain fully functional and visible on mobile screens.
-6. **[sidebar.jsx](file:///c:/Users/rajra/Desktop/personal-projects/citizen-grievance-portal/citizen-grievance-frontend/src/components/layout/sidebar.jsx)**:
-   - Implemented `useLocation` matched route highlighting:
-     - Inactive: `text-gray-600 hover:bg-gray-100 hover:text-blue-600`
-     - Active: `bg-blue-50 text-blue-700 border-r-4 border-blue-700 font-semibold`
-   - Added a responsive layout: converts dynamically to a horizontal bottom nav bar on mobile devices (`md:hidden`).
-7. **[ProtectedLayout.jsx](file:///c:/Users/rajra/Desktop/personal-projects/citizen-grievance-portal/citizen-grievance-frontend/src/components/layout/ProtectedLayout.jsx)**:
-   - Added padding bottom `pb-16` on mobile screens to prevent navigation bar overlaps.
-8. **Bug 2 Sync (Officer & Admin Dashboard)**:
-   - Synchronized close modal states (`handleCloseModal` / `handleCloseViewModal`) to clear `complaintId` URL query parameters when modal is closed.
-   - Enhanced `useEffect` hooks to dynamically auto-close modals if the URL query parameter `complaintId` becomes null.
+### Frontend Changes
+1. Updated complaintService.getComplaint to support dynamic, role-prefixed path mapping.
+2. Added complaintService.updateLastViewedAt to hit the view receipt endpoint.
+3. Fixed NotificationDropdown in navbar.jsx: notification body click navigates but does not mark read; added a distinct Check icon button to mark read.
+4. Fixed NotificationContext.jsx to correct the SSE URL path and dispatch a "live-notification" CustomEvent.
+5. Added live SSE notification event listeners inside Officer, Admin, and Citizen details views to trigger automatic details re-fetch.
+6. Added automatic background updateLastViewedAt calls when grievance details are opened/mounted.
+7. Rendered green "New" badges next to comments and attachments that were uploaded after the user's last viewed timestamp.
+8. Rendered assigned officer name and department in Citizen view with a clean "Unassigned" fallback.
 
 ---
 
 ## Validation
-- Backend: `mvn compile` → **BUILD SUCCESS** ✅
-- Frontend: `npm run build` → **✓ built in 2.33s** ✅
-
-## Next Steps
-1. **QA Testing**:
-   - Verify that an assigned officer can comment on their grievance without hitting a 403 or 500 error.
-   - Verify that closing details/resolution modals in Admin and Officer dashboards clears the query parameters from the URL.
-   - Verify mobile bottom navigation display and functionality.
-2. **Git**: Approve and merge `feature/officer-comments-layout-fixes` into development and master.
+- Backend: mvn compile → BUILD SUCCESS ✅
+- Frontend: npm run build → built successfully in 922ms ✅

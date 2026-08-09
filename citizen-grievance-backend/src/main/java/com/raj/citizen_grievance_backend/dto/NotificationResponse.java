@@ -28,6 +28,12 @@ public class NotificationResponse {
     @Schema(description = "Optional related complaint UUID for deep-linking", example = "f8c85312-d9e2-411a-96e0-394856f7ef53")
     private UUID relatedComplaintId;
 
+    @Schema(description = "Type of notification (COMMENT, STATUS, IMAGE)", example = "COMMENT")
+    private String type;
+
+    @Schema(description = "Unique identifier of the target entity (comment or image)", example = "d3b07384-d113-49c7-a5c6-cf0d8324e930")
+    private UUID targetEntityId;
+
     @Schema(description = "Flag indicating if the notification has been read", example = "false")
     private Boolean isRead;
 

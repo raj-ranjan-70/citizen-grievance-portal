@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { complaintService } from "@/services/complaintService";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,8 @@ import {
   AlertCircle,
   Edit2,
   UserCheck,
-  Building
+  Building,
+  MessageSquare
 } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,11 +25,25 @@ import { useAuth } from "@/hooks/useAuth";
 export const ComplaintDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
 
+  const focusId = searchParams.get("focusId");
+  const focusType = searchParams.get("type");
+
+  // Refs for auto-scroll and highlight
+  const commentRefs = useRef({});
+  const imageRefs = useRef({});
+  const statusRef = useRef(null);
+
+  // States
   const [complaint, setComplaint] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Highlight states
+  const [highlightedId, setHighlightedId] = useState(null);
+  const [highlightStatus, setHighlightStatus] = useState(false);
 
   // Comment submission states
   const [newComment, setNewComment] = useState("");
@@ -39,6 +54,11 @@ export const ComplaintDetailsPage = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [toastMessage, setToastMessage] = useState(null);
+
+  // Viewport Intersection States
+  const chatContainerRef = useRef(null);
+  const [isChatInViewport, setIsChatInViewport] = useState(true);
+  const [showNewMessageIndicator, setShowNewMessageIndicator] = useState(false);
 
   const showToast = (message, type = "success") => {
     setToastMessage({ message, type });
@@ -55,7 +75,6 @@ export const ComplaintDetailsPage = () => {
       for (const file of acceptedFiles) {
         await complaintService.uploadImage(id, file);
       }
-      // Refetch the complaint details to guarantee all images are updated and displayed immediately
       const refreshed = await complaintService.getComplaint(id);
       setComplaint(refreshed);
       showToast("Attachment(s) uploaded successfully!", "success");
@@ -80,29 +99,35 @@ export const ComplaintDetailsPage = () => {
     multiple: true
   });
 
+  const fetchDetails = async () => {
+    try {
+      const data = await complaintService.getComplaint(id);
+      setComplaint(data);
+      complaintService.updateLastViewedAt(id).catch(console.error);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to load complaint details.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchDetails = async () => {
-      setLoading(true);
-      try {
-        const data = await complaintService.getComplaint(id);
-        setComplaint(data);
-        // Update viewed receipt in background
-        complaintService.updateLastViewedAt(id).catch(console.error);
-      } catch (err) {
-        setError(err.response?.data?.message || "Failed to load complaint details.");
-      } finally {
-        setLoading(false);
-      }
-    };
+    setLoading(true);
     fetchDetails();
   }, [id]);
 
+  // Live sync from SSE notifications
   useEffect(() => {
     const handleLiveSync = (e) => {
       const notification = e.detail;
       if (notification && notification.relatedComplaintId === id) {
         complaintService.getComplaint(id)
-          .then(setComplaint)
+          .then((data) => {
+            setComplaint(data);
+            if (!isChatInViewport && notification.type === "COMMENT") {
+              setShowNewMessageIndicator(true);
+            }
+          })
           .catch(console.error);
       }
     };
@@ -110,7 +135,51 @@ export const ComplaintDetailsPage = () => {
     return () => {
       window.removeEventListener("live-notification", handleLiveSync);
     };
-  }, [id]);
+  }, [id, isChatInViewport]);
+
+  // Intersection Observer to monitor viewport visibility of discussion section
+  useEffect(() => {
+    if (!chatContainerRef.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsChatInViewport(entry.isIntersecting);
+        if (entry.isIntersecting) {
+          setShowNewMessageIndicator(false);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(chatContainerRef.current);
+    return () => observer.disconnect();
+  }, [complaint]);
+
+  // Deep-link: Scroll to and highlight specific item
+  useEffect(() => {
+    if (!complaint || !focusId) return;
+
+    const scrollTimer = setTimeout(() => {
+      if (focusType === "COMMENT" && commentRefs.current[focusId]) {
+        commentRefs.current[focusId].scrollIntoView({ behavior: "smooth", block: "center" });
+        setHighlightedId(focusId);
+        const timer = setTimeout(() => setHighlightedId(null), 2000);
+        return () => clearTimeout(timer);
+      } else if (focusType === "IMAGE" && imageRefs.current[focusId]) {
+        imageRefs.current[focusId].scrollIntoView({ behavior: "smooth", block: "center" });
+        setHighlightedId(focusId);
+        const timer = setTimeout(() => setHighlightedId(null), 2000);
+        return () => clearTimeout(timer);
+      } else if (focusType === "STATUS" && statusRef.current) {
+        statusRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+        setHighlightStatus(true);
+        const timer = setTimeout(() => setHighlightStatus(false), 2000);
+        return () => clearTimeout(timer);
+      }
+    }, 400);
+
+    return () => clearTimeout(scrollTimer);
+  }, [complaint, focusId, focusType]);
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
@@ -140,8 +209,7 @@ export const ComplaintDetailsPage = () => {
       case "HIGH":
         return "bg-error/10 text-error border-error/20";
       case "MEDIUM":
-        return "bg-warning/10 text-warning-foreground border-warning/20";
-      case "LOW":
+        return "bg-warning/10 text-warning border-warning/20";
       default:
         return "bg-neutral-100 text-neutral-600 border-neutral-200";
     }
@@ -164,7 +232,7 @@ export const ComplaintDetailsPage = () => {
       case "IN_PROGRESS":
         return {
           label: "In Progress",
-          style: "bg-warning/15 text-warning-foreground border-warning/30",
+          style: "bg-warning/15 text-warning border-warning/30",
           icon: Clock
         };
       case "SUBMITTED":
@@ -202,7 +270,7 @@ export const ComplaintDetailsPage = () => {
     return (
       <div className="p-4 sm:p-8 max-w-4xl mx-auto space-y-4">
         <button
-          onClick={() => navigate("/citizen/complaints")}
+          onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-sm font-semibold text-neutral-600 hover:text-primary transition-colors cursor-pointer"
         >
           <ArrowLeft className="size-4" /> Back to My Complaints
@@ -222,7 +290,7 @@ export const ComplaintDetailsPage = () => {
   const isEditable = complaint.status === "SUBMITTED";
 
   return (
-    <div className="p-4 sm:p-8 max-w-4xl mx-auto space-y-6">
+    <div className="p-4 sm:p-8 max-w-4xl mx-auto space-y-6 relative">
       {/* Toast Notification */}
       {toastMessage && (
         <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg border text-sm font-semibold animate-slideIn ${
@@ -239,21 +307,22 @@ export const ComplaintDetailsPage = () => {
         </div>
       )}
 
-      {/* Top Bar Navigation */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <button
-          onClick={() => navigate("/citizen/complaints")}
-          className="flex items-center gap-2 text-sm font-semibold text-neutral-600 hover:text-primary transition-colors group cursor-pointer"
-        >
-          <ArrowLeft className="size-4 group-hover:-translate-x-0.5 transition-transform" />
-          Back to My Complaints
-        </button>
+      {/* Fixed Back Button */}
+      <button
+        onClick={() => navigate(-1)}
+        className="fixed top-24 left-6 z-40 flex items-center justify-center size-10 rounded-full border border-neutral-200 bg-white shadow hover:bg-neutral-50 text-neutral-600 hover:text-neutral-900 transition-all cursor-pointer"
+        title="Go Back"
+      >
+        <ArrowLeft className="size-5" />
+      </button>
 
+      {/* Edit button container */}
+      <div className="flex justify-end">
         {isEditable && (
           <Button
             onClick={() => navigate(`/citizen/complaints/${complaint.id}/edit`)}
             variant="outline"
-            className="flex items-center gap-2 self-start sm:self-auto cursor-pointer"
+            className="flex items-center gap-2 cursor-pointer font-semibold"
           >
             <Edit2 className="size-4" />
             Edit Complaint
@@ -271,7 +340,9 @@ export const ComplaintDetailsPage = () => {
 
           <div className="flex items-center gap-3">
             {/* Status badge */}
-            <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-semibold ${statusInfo.style}`}>
+            <div ref={statusRef} className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-semibold transition-all ${
+              highlightStatus ? "bg-yellow-200 border-yellow-400 text-yellow-900 animate-pulse" : statusInfo.style
+            }`}>
               <StatusIcon className="size-3.5" />
               <span>{statusInfo.label}</span>
             </div>
@@ -365,16 +436,24 @@ export const ComplaintDetailsPage = () => {
           {/* Grievance Attachments (Images) */}
           <div className="space-y-3 pt-2">
             <Label className="text-xs font-bold uppercase tracking-wider text-neutral-400">
-              Grievance Attachments ({complaint.imageUuids?.length || 0})
+              Grievance Attachments ({complaint.imageDetails?.length || 0})
             </Label>
             
             {complaint.imageDetails && complaint.imageDetails.length > 0 && (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 {complaint.imageDetails.map((img) => {
                   const isNew = complaint.citizenLastViewedAt && 
-                    new Date(img.uploadedAt) > new Date(complaint.citizenLastViewedAt);
+                    new Date(img.uploadedAt) > new Date(complaint.citizenLastViewedAt) &&
+                    user?.role !== "CITIZEN";
+                  const isHighlighted = highlightedId === img.id;
                   return (
-                    <div key={img.imageUuid} className="group relative aspect-video rounded-lg overflow-hidden border border-neutral-200 bg-neutral-100 hover:shadow-md transition-all">
+                    <div
+                      key={img.imageUuid}
+                      ref={(el) => (imageRefs.current[img.id] = el)}
+                      className={`group relative aspect-video rounded-lg overflow-hidden border bg-neutral-100 hover:shadow-md transition-all ${
+                        isHighlighted ? "border-yellow-400 ring-4 ring-yellow-200" : "border-neutral-200"
+                      }`}
+                    >
                       <img
                         src={`${import.meta.env.VITE_R2_PUBLIC_URL}/${img.imageUuid}.webp`}
                         alt="Grievance attachment"
@@ -467,10 +546,10 @@ export const ComplaintDetailsPage = () => {
       </Card>
 
       {/* Discussion & Comments Section */}
-      <Card className="border border-neutral-200 shadow-md bg-white rounded-lg overflow-hidden">
+      <Card ref={chatContainerRef} className="border border-neutral-200 shadow-md bg-white rounded-lg overflow-hidden">
         <CardHeader className="pb-3 border-b border-neutral-100 bg-neutral-50/50">
           <CardTitle className="text-lg font-bold text-neutral-900">Discussion & Comments</CardTitle>
-          <CardDescription className="text-xs text-neutral-500">
+          <CardDescription className="text-xs text-neutral-500 font-medium">
             Official communications, updates, and comments thread.
           </CardDescription>
         </CardHeader>
@@ -478,7 +557,7 @@ export const ComplaintDetailsPage = () => {
           {/* Comments List */}
           <div className="space-y-4">
             {(!complaint.comments || complaint.comments.length === 0) ? (
-              <div className="text-center py-6 text-neutral-400 text-sm border border-dashed border-neutral-200 rounded-lg">
+              <div className="text-center py-6 text-neutral-400 text-sm border border-dashed border-neutral-200 rounded-lg italic">
                 No comments or updates yet on this grievance.
               </div>
             ) : (
@@ -486,14 +565,19 @@ export const ComplaintDetailsPage = () => {
                 {complaint.comments.map((comment) => {
                   const isOfficer = comment.authorRole === "OFFICER" || comment.authorRole === "ADMIN";
                   const isNew = complaint.citizenLastViewedAt && 
-                    new Date(comment.createdAt) > new Date(complaint.citizenLastViewedAt);
+                    new Date(comment.createdAt) > new Date(complaint.citizenLastViewedAt) &&
+                    comment.authorId !== user?.id;
+                  const isHighlighted = highlightedId === comment.id;
                   return (
                     <div
                       key={comment.id}
-                      className={`flex flex-col p-4 rounded-lg border text-sm max-w-[85%] relative ${
+                      ref={(el) => (commentRefs.current[comment.id] = el)}
+                      className={`flex flex-col p-4 rounded-lg border text-sm max-w-[85%] relative transition-all duration-500 ${
                         isOfficer
                           ? "bg-primary/5 border-primary/20 mr-auto text-neutral-800"
                           : "bg-neutral-50 border-neutral-200 ml-auto text-neutral-800"
+                      } ${
+                        isHighlighted ? "ring-4 ring-yellow-200 border-yellow-400 bg-yellow-50" : ""
                       }`}
                     >
                       <div className="flex items-center justify-between gap-4 mb-1.5">
@@ -523,41 +607,61 @@ export const ComplaintDetailsPage = () => {
           </div>
 
           {/* Add Comment Form */}
-          <form onSubmit={handleCommentSubmit} className="pt-4 border-t border-neutral-100 space-y-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="comment" className="font-semibold text-neutral-800 text-xs uppercase tracking-wider">
-                Post an Update
-              </Label>
-              <Textarea
-                id="comment"
-                rows={3}
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Type your message or query here..."
-                required
-                disabled={commentLoading}
-                error={!!commentError}
-              />
-            </div>
-            {commentError && (
-              <div className="text-xs text-error font-medium flex items-center gap-1"><AlertCircle className="size-3.5" />{commentError}</div>
-            )}
-            <Button
-              type="submit"
-              variant="primary"
-              size="sm"
-              disabled={commentLoading || !newComment.trim()}
-              className="flex items-center gap-2 cursor-pointer"
-            >
-              {commentLoading ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                "Post Comment"
+          {complaint.status !== "RESOLVED" && complaint.status !== "REJECTED" && (
+            <form onSubmit={handleCommentSubmit} className="pt-4 border-t border-neutral-100 space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="comment" className="font-semibold text-neutral-800 text-xs uppercase tracking-wider">
+                  Post an Update
+                </Label>
+                <Textarea
+                  id="comment"
+                  rows={3}
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Type your message or query here..."
+                  required
+                  disabled={commentLoading}
+                />
+              </div>
+              {commentError && (
+                <div className="text-xs text-error font-medium flex items-center gap-1"><AlertCircle className="size-3.5" />{commentError}</div>
               )}
-            </Button>
-          </form>
+              <div className="flex justify-end">
+                <Button
+                  type="submit"
+                  variant="primary"
+                  disabled={commentLoading || !newComment.trim()}
+                  className="flex items-center gap-2 cursor-pointer font-semibold"
+                >
+                  {commentLoading ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    "Post Comment"
+                  )}
+                </Button>
+              </div>
+            </form>
+          )}
         </CardContent>
       </Card>
+
+      {/* Floating Viewport-Aware New Message Alert */}
+      {showNewMessageIndicator && (
+        <div className="fixed bottom-6 right-6 z-40 animate-bounce">
+          <Button
+            onClick={() => {
+              if (chatContainerRef.current) {
+                chatContainerRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+                setShowNewMessageIndicator(false);
+              }
+            }}
+            className="bg-primary text-white hover:bg-primary/95 font-semibold text-xs py-2.5 px-4 rounded-full shadow-lg flex items-center gap-2 border-transparent cursor-pointer"
+          >
+            <MessageSquare className="size-4" />
+            New comment below 👇
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

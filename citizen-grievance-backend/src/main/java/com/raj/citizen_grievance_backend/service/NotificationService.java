@@ -2,6 +2,7 @@ package com.raj.citizen_grievance_backend.service;
 
 import com.raj.citizen_grievance_backend.dto.NotificationResponse;
 import com.raj.citizen_grievance_backend.entity.Notification;
+import com.raj.citizen_grievance_backend.entity.NotificationType;
 import com.raj.citizen_grievance_backend.exception.ForbiddenException;
 import com.raj.citizen_grievance_backend.exception.ResourceNotFoundException;
 import com.raj.citizen_grievance_backend.repository.NotificationRepository;
@@ -92,11 +93,13 @@ public class NotificationService {
     }
 
     @Transactional
-    public void sendNotification(UUID recipientId, String message, UUID relatedComplaintId) {
+    public void sendNotification(UUID recipientId, String message, UUID relatedComplaintId, NotificationType type, UUID targetEntityId) {
         Notification notification = Notification.builder()
                 .recipientId(recipientId)
                 .message(message)
                 .relatedComplaintId(relatedComplaintId)
+                .type(type)
+                .targetEntityId(targetEntityId)
                 .isRead(false)
                 .build();
 
@@ -149,6 +152,8 @@ public class NotificationService {
                 .recipientId(notification.getRecipientId())
                 .message(notification.getMessage())
                 .relatedComplaintId(notification.getRelatedComplaintId())
+                .type(notification.getType() != null ? notification.getType().name() : null)
+                .targetEntityId(notification.getTargetEntityId())
                 .isRead(notification.getIsRead())
                 .createdAt(notification.getCreatedAt())
                 .build();
