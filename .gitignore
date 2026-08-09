@@ -3,3 +3,6 @@
 *.class
 target/
 .DS_Store
+
+# Ignore production properties files containing secrets
+**/application-prod.properties
