@@ -140,6 +140,19 @@ public class AdminService {
                         .build())
                 .collect(Collectors.toList());
 
+        List<String> imageUuids = complaint.getImages() != null ?
+                complaint.getImages().stream()
+                        .map(com.raj.citizen_grievance_backend.entity.ComplaintImage::getImageUuid)
+                        .collect(Collectors.toList()) : java.util.Collections.emptyList();
+
+        List<ComplaintImageResponse> imageDetails = complaint.getImages() != null ?
+                complaint.getImages().stream()
+                        .map(img -> ComplaintImageResponse.builder()
+                                .imageUuid(img.getImageUuid())
+                                .uploadedAt(img.getUploadedAt())
+                                .build())
+                        .collect(Collectors.toList()) : java.util.Collections.emptyList();
+
         return ComplaintResponse.builder()
                 .id(complaint.getId())
                 .title(complaint.getTitle())
@@ -150,9 +163,23 @@ public class AdminService {
                 .citizenName(complaint.getCitizen().getName())
                 .citizenEmail(complaint.getCitizen().getEmail())
                 .assignedOfficerName(complaint.getAssignedOfficer() != null ? complaint.getAssignedOfficer().getName() : null)
+                .assignedOfficerDepartment(complaint.getAssignedOfficer() != null && complaint.getAssignedOfficer().getDepartment() != null ? complaint.getAssignedOfficer().getDepartment().name() : null)
+                .citizenLastViewedAt(complaint.getCitizenLastViewedAt())
+                .officerLastViewedAt(complaint.getOfficerLastViewedAt())
                 .createdAt(complaint.getCreatedAt())
                 .updatedAt(complaint.getUpdatedAt())
                 .comments(comments)
+                .imageUuids(imageUuids)
+                .imageDetails(imageDetails)
+                .resolutionImageUuid(complaint.getResolutionImageUuid())
+                .remarks(complaint.getRemarks())
                 .build();
+    }
+
+    public ComplaintResponse getComplaintDetails(UUID complaintId, UUID adminId) {
+        verifyAdmin(adminId);
+        Complaint complaint = complaintRepository.findById(complaintId)
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with ID: " + complaintId));
+        return mapToComplaintResponse(complaint);
     }
 }

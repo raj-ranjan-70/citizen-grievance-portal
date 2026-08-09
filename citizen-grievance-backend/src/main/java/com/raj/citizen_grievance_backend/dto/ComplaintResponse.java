@@ -46,6 +46,15 @@ public class ComplaintResponse {
     @Schema(description = "Full name of the assigned officer, if any", example = "Officer Kumar")
     private String assignedOfficerName;
 
+    @Schema(description = "Department of the assigned officer, if any", example = "WATER")
+    private String assignedOfficerDepartment;
+
+    @Schema(description = "Timestamp of when the citizen last viewed the complaint details", example = "2026-08-06T10:00:00")
+    private LocalDateTime citizenLastViewedAt;
+
+    @Schema(description = "Timestamp of when the assigned officer last viewed the complaint details", example = "2026-08-06T10:00:00")
+    private LocalDateTime officerLastViewedAt;
+
     @Schema(description = "Timestamp of creation", example = "2026-08-06T10:00:00")
     private LocalDateTime createdAt;
 
@@ -57,6 +66,9 @@ public class ComplaintResponse {
 
     @Schema(description = "List of associated image UUIDs submitted by the citizen", example = "[\"e1b12345-1234-1234-1234-123412341234\"]")
     private List<String> imageUuids;
+
+    @Schema(description = "List of associated image details including timestamps")
+    private List<ComplaintImageResponse> imageDetails;
 
     @Schema(description = "UUID of the proof image uploaded by the officer upon resolution", example = "f9c98765-4321-4321-4321-432143214321")
     private String resolutionImageUuid;

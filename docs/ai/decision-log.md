@@ -57,6 +57,14 @@
 - **Rationale:** Ensures citizens, officers, and administrators receive immediate notifications when complaints are created, comments posted, images attached, or assignments updated, improving overall response times.
 - **Technical Details:** The `NotificationService` maintains active connection streams in a `ConcurrentHashMap` with multi-tab support. A scheduled heartbeat runs every 15s to keep connections open. Trigger points are injected into existing Services. The React app opens the SSE stream using native `EventSource` with `withCredentials: true` to forward session cookies, prepending incoming messages to states and rendering them in a customized Navbar dropdown.
 
+## 14. Decoupled Live Sync using Custom browser Events
+- **Decision:** Dispatch a custom "live-notification" Event on the window object from the NotificationContext, and listen to it within dashboard pages.
+- **Rationale:** Keeps the SSE listener logic centralized in the context while enabling any page or modal to easily react to incoming notifications and fetch fresh data without coupling.
 
+## 15. Viewed Receipts and New Badges
+- **Decision:** Add citizenLastViewedAt and officerLastViewedAt to the Complaint entity, expose a PUT view endpoint, and compare comment and image timestamps on the frontend.
+- **Rationale:** Supports WhatsApp-style "New" indicators for comments and images, automatically clearing them on the user's next visit when they open the complaint detail modal.
 
-
+## 16. Role-Prefixed GET Endpoints for Officer and Admin
+- **Decision:** Expose GET /api/v1/officer/complaints/{id} and GET /api/v1/admin/complaints/{id} endpoints.
+- **Rationale:** Ensures that the RoleAuthInterceptor can enforce proper access rules while allowing the frontend to fetch complete up-to-date single-complaint details for modals.

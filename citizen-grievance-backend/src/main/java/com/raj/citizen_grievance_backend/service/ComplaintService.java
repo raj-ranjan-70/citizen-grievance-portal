@@ -220,6 +220,14 @@ public class ComplaintService {
                         .map(ComplaintImage::getImageUuid)
                         .collect(Collectors.toList()) : java.util.Collections.emptyList();
 
+        List<ComplaintImageResponse> imageDetails = complaint.getImages() != null ?
+                complaint.getImages().stream()
+                        .map(img -> ComplaintImageResponse.builder()
+                                .imageUuid(img.getImageUuid())
+                                .uploadedAt(img.getUploadedAt())
+                                .build())
+                        .collect(Collectors.toList()) : java.util.Collections.emptyList();
+
         return ComplaintResponse.builder()
                 .id(complaint.getId())
                 .title(complaint.getTitle())
@@ -230,10 +238,14 @@ public class ComplaintService {
                 .citizenName(complaint.getCitizen().getName())
                 .citizenEmail(complaint.getCitizen().getEmail())
                 .assignedOfficerName(complaint.getAssignedOfficer() != null ? complaint.getAssignedOfficer().getName() : null)
+                .assignedOfficerDepartment(complaint.getAssignedOfficer() != null && complaint.getAssignedOfficer().getDepartment() != null ? complaint.getAssignedOfficer().getDepartment().name() : null)
+                .citizenLastViewedAt(complaint.getCitizenLastViewedAt())
+                .officerLastViewedAt(complaint.getOfficerLastViewedAt())
                 .createdAt(complaint.getCreatedAt())
                 .updatedAt(complaint.getUpdatedAt())
                 .comments(comments)
                 .imageUuids(imageUuids)
+                .imageDetails(imageDetails)
                 .resolutionImageUuid(complaint.getResolutionImageUuid())
                 .remarks(complaint.getRemarks())
                 .build();
@@ -247,5 +259,24 @@ public class ComplaintService {
                 .authorRole(comment.getAuthor().getRole().name())
                 .createdAt(comment.getCreatedAt())
                 .build();
+    }
+
+    @Transactional
+    public void updateLastViewedAt(UUID complaintId, UUID userId, String roleStr) {
+        Complaint complaint = complaintRepository.findById(complaintId)
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with ID: " + complaintId));
+
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        if ("CITIZEN".equalsIgnoreCase(roleStr)) {
+            if (complaint.getCitizen().getId().equals(userId)) {
+                complaint.setCitizenLastViewedAt(now);
+                complaintRepository.save(complaint);
+            }
+        } else if ("OFFICER".equalsIgnoreCase(roleStr)) {
+            if (complaint.getAssignedOfficer() != null && complaint.getAssignedOfficer().getId().equals(userId)) {
+                complaint.setOfficerLastViewedAt(now);
+                complaintRepository.save(complaint);
+            }
+        }
     }
 }

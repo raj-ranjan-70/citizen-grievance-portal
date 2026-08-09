@@ -41,6 +41,10 @@ export const NotificationProvider = ({ children }) => {
       try {
         const newNotification = JSON.parse(event.data);
         setNotifications((prev) => [newNotification, ...prev]);
+
+        // Dispatch a custom event on window for live sync across views
+        const customEvent = new CustomEvent("live-notification", { detail: newNotification });
+        window.dispatchEvent(customEvent);
       } catch (err) {
         console.error("Failed to parse push notification message", err);
       }
