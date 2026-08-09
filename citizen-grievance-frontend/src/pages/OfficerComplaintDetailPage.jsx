@@ -469,15 +469,17 @@ export const OfficerComplaintDetailPage = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {complaint.comments.map((comment) => {
+                {complaint.comments.map((comment, index) => {
                   const isOfficerAuthor = comment.authorRole === "OFFICER" || comment.authorRole === "ADMIN";
-                  const isNew = complaint.officerLastViewedAt &&
+                  const isNew = (index === complaint.comments.length - 1) &&
+                    complaint.officerLastViewedAt &&
                     new Date(comment.createdAt) > new Date(complaint.officerLastViewedAt) &&
                     comment.authorId !== user?.id;
                   const isHighlighted = highlightedId === comment.id;
                   return (
                     <div
                       key={comment.id}
+                      id={`comment-${comment.id}`}
                       ref={(el) => (commentRefs.current[comment.id] = el)}
                       className={`flex flex-col p-4 rounded-lg border text-sm max-w-[85%] relative transition-all duration-500 ${
                         isOfficerAuthor
@@ -559,9 +561,17 @@ export const OfficerComplaintDetailPage = () => {
         <div className="fixed bottom-6 right-6 z-40 animate-bounce">
           <Button
             onClick={() => {
-              if (chatContainerRef.current) {
-                chatContainerRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
-                setShowNewMessageIndicator(false);
+              setShowNewMessageIndicator(false);
+              if (complaint.comments && complaint.comments.length > 0) {
+                const lastComment = complaint.comments[complaint.comments.length - 1];
+                const element = document.getElementById(`comment-${lastComment.id}`);
+                if (element) {
+                  element.scrollIntoView({ behavior: "smooth", block: "center" });
+                  element.classList.add("bg-yellow-100");
+                  setTimeout(() => {
+                    element.classList.remove("bg-yellow-100");
+                  }, 2000);
+                }
               }
             }}
             className="bg-primary text-white hover:bg-primary/95 font-semibold text-xs py-2.5 px-4 rounded-full shadow-lg flex items-center gap-2 border-transparent cursor-pointer"
