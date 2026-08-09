@@ -22,6 +22,8 @@ Staged, committed, and merged `feature/fullpage-routing-smart-notifications` int
 5. Implemented `IntersectionObserver` on both Citizen and Officer details pages to show a floating "New comment below" alert when comment feed updates happen out-of-viewport.
 6. Implemented automatic ref scroll-into-view and yellow highlight for targeted comments and images.
 7. Refined "New" indicators to suppress badges on own-authored actions.
+8. Fixed mobile notification dropdown cut-off by positioning relative to viewport width (`w-screen max-w-[calc(100vw-2rem)] sm:max-w-sm`).
+9. Added URL query parameter cleanup via `setSearchParams` inside scroll-and-highlight `useEffect` to remove `focusId` and `type` params after the 2000ms animation timer expires.
 
 ---
 
