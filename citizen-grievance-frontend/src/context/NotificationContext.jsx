@@ -86,8 +86,17 @@ export const NotificationProvider = ({ children }) => {
     }
   };
 
+  const markAllAsRead = async () => {
+    try {
+      await notificationService.markAllAsRead();
+      setNotifications([]);
+    } catch (err) {
+      console.error("Failed to mark all notifications as read", err);
+    }
+  };
+
   return (
-    <NotificationContext.Provider value={{ notifications, markAsRead, fetchUnread }}>
+    <NotificationContext.Provider value={{ notifications, markAsRead, markAllAsRead, fetchUnread }}>
       {children}
     </NotificationContext.Provider>
   );

@@ -280,14 +280,19 @@ export const OfficerComplaintDetailPage = () => {
 
   return (
     <div className="p-4 sm:p-8 max-w-4xl mx-auto space-y-6 relative">
-      {/* Fixed Back Button */}
-      <button
-        onClick={() => navigate(-1)}
-        className="fixed top-24 left-6 z-40 flex items-center justify-center size-10 rounded-full border border-neutral-200 bg-white shadow hover:bg-neutral-50 text-neutral-600 hover:text-neutral-900 transition-all cursor-pointer"
-        title="Go Back"
-      >
-        <ArrowLeft className="size-5" />
-      </button>
+      {/* Top Action Bar */}
+      <div className="flex items-center justify-between gap-4">
+        <button
+          onClick={() => navigate('/officer/dashboard')}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 shadow-sm text-sm font-semibold text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer"
+          title="Back to Dashboard"
+        >
+          <span>
+            <ArrowLeft className="inline w-5 h-5 mr-1" />
+            <span className="hidden sm:inline">Back to Dashboard</span>
+          </span>
+        </button>
+      </div>
 
       {/* Main Details Card */}
       <Card className="border border-neutral-200 shadow-md bg-white rounded-lg overflow-hidden">
@@ -360,7 +365,8 @@ export const OfficerComplaintDetailPage = () => {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 {complaint.imageDetails.map((img) => {
                   const isNew = complaint.officerLastViewedAt &&
-                    new Date(img.uploadedAt) > new Date(complaint.officerLastViewedAt);
+                    new Date(img.uploadedAt) > new Date(complaint.officerLastViewedAt) &&
+                    img.authorId !== user?.id;
                   const isHighlighted = highlightedId === img.id;
                   return (
                     <div
