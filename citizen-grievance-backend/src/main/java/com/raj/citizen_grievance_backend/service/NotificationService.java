@@ -146,6 +146,15 @@ public class NotificationService {
         notificationRepository.save(notification);
     }
 
+    @Transactional
+    public void markAllAsRead(UUID userId) {
+        List<Notification> unread = notificationRepository.findByRecipientIdAndIsReadFalseOrderByCreatedAtDesc(userId);
+        for (Notification notification : unread) {
+            notification.setIsRead(true);
+        }
+        notificationRepository.saveAll(unread);
+    }
+
     private NotificationResponse mapToResponse(Notification notification) {
         return NotificationResponse.builder()
                 .id(notification.getId())

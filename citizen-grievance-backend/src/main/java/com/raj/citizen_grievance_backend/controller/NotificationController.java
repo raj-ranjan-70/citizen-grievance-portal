@@ -85,4 +85,23 @@ public class NotificationController {
                 .build();
         return ResponseEntity.ok(response);
     }
+
+    @PutMapping("/read-all")
+    @Operation(summary = "Mark all notifications as read", description = "Marks all unread notifications for the authenticated user as read")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "All notifications marked as read successfully",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Not authenticated",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+    })
+    public ResponseEntity<ApiResponse<Void>> markAllAsRead(HttpServletRequest servletRequest) {
+        UUID userId = getAuthenticatedUserId(servletRequest);
+        notificationService.markAllAsRead(userId);
+
+        ApiResponse<Void> response = ApiResponse.<Void>builder()
+                .success(true)
+                .message("All notifications marked as read")
+                .build();
+        return ResponseEntity.ok(response);
+    }
 }

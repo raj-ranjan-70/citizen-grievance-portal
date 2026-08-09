@@ -22,7 +22,7 @@ export const Navbar = React.forwardRef(({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
-  const { notifications, markAsRead } = useContext(NotificationContext) || { notifications: [], markAsRead: () => {} };
+  const { notifications, markAsRead, markAllAsRead } = useContext(NotificationContext) || { notifications: [], markAsRead: () => {}, markAllAsRead: () => {} };
   const { user: authUser } = useContext(AuthContext) || {};
 
   useEffect(() => {
@@ -133,12 +133,25 @@ export const Navbar = React.forwardRef(({
 
                   {/* Dropdown Menu */}
                   {dropdownOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-screen max-w-[calc(100vw-2rem)] sm:max-w-sm rounded-lg border border-neutral-200 bg-white shadow-xl py-1 z-50 animate-fadeIn text-sm">
+                    <div className="fixed top-16 right-2 w-[calc(100vw-1rem)] z-50 sm:absolute sm:top-full sm:right-0 sm:w-80 sm:mt-2 rounded-lg border border-neutral-200 bg-white shadow-xl py-1 animate-fadeIn text-sm">
                       <div className="px-4 py-2.5 border-b border-neutral-100 flex items-center justify-between bg-neutral-50/50">
-                        <span className="font-bold text-neutral-800">Notifications</span>
-                        <span className="text-[10px] font-semibold bg-neutral-200 text-neutral-700 px-2 py-0.5 rounded-full">
-                          {notifications.length} Unread
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-neutral-800">Notifications</span>
+                          <span className="text-[10px] font-semibold bg-neutral-200 text-neutral-700 px-2 py-0.5 rounded-full">
+                            {notifications.length} Unread
+                          </span>
+                        </div>
+                        {notifications.length > 0 && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              markAllAsRead();
+                            }}
+                            className="text-xs font-semibold text-primary hover:text-primary-dark hover:underline cursor-pointer bg-transparent border-0"
+                          >
+                            Mark all as read
+                          </button>
+                        )}
                       </div>
                       <div className="max-h-72 overflow-y-auto divide-y divide-neutral-100">
                         {notifications.length === 0 ? (
@@ -152,6 +165,7 @@ export const Navbar = React.forwardRef(({
                               className="p-3 hover:bg-neutral-50 transition-colors flex items-start gap-2.5 cursor-pointer relative group"
                               onClick={() => {
                                 setDropdownOpen(false);
+                                markAsRead(n.id);
                                 if (n.relatedComplaintId) {
                                   const role = (authUser?.role || user?.role)?.toUpperCase();
                                   const focusParams = n.targetEntityId ? `?focusId=${n.targetEntityId}&type=${n.type || ""}` : "";
@@ -166,7 +180,7 @@ export const Navbar = React.forwardRef(({
                               }}
                             >
                               <div className="size-2 rounded-full bg-primary mt-1.5 shrink-0" />
-                              <div className="flex-1 min-w-0 pr-2">
+                              <div className="flex-1 min-w-0">
                                 <p className="text-xs text-neutral-700 font-medium leading-normal break-words">
                                   {n.message}
                                 </p>
@@ -174,16 +188,6 @@ export const Navbar = React.forwardRef(({
                                   {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </span>
                               </div>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  markAsRead(n.id);
-                                }}
-                                className="p-1 rounded bg-neutral-50 hover:bg-success/15 text-neutral-400 hover:text-success transition-colors shrink-0 cursor-pointer self-center"
-                                title="Mark as read"
-                              >
-                                <Check className="size-4" />
-                              </button>
                             </div>
                           ))
                         )}

@@ -23,4 +23,7 @@ public class ComplaintImageResponse {
 
     @Schema(description = "Timestamp of when the image was uploaded", example = "2026-08-06T10:00:00")
     private LocalDateTime uploadedAt;
+
+    @Schema(description = "Unique identifier / UUID of the citizen who uploaded the image", example = "6939a4ce-1f5b-41bc-906a-83384a790881")
+    private java.util.UUID authorId;
 }

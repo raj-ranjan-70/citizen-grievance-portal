@@ -253,6 +253,7 @@ public class OfficerService {
                                 .id(img.getId())
                                 .imageUuid(img.getImageUuid())
                                 .uploadedAt(img.getUploadedAt())
+                                .authorId(complaint.getCitizen().getId())
                                 .build())
                         .collect(Collectors.toList()) : java.util.Collections.emptyList();
 
