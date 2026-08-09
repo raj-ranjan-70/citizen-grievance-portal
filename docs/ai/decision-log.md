@@ -83,3 +83,8 @@
 - **Decision:** Compare incoming notification's relatedComplaintId with the active page URL in NotificationContext, and observe chat thread visibility using IntersectionObserver.
 - **Rationale:** Prevents annoying alert popups or unread count increments when the user is already on the relevant grievance page, but alerts them with a floating badge if they are scrolled away.
 - **Technical Details:** Matching pathname IDs suppresses the unread badge state and triggers background read receipt calls. The details pages utilize IntersectionObserver on the chat container; if it is out of view, a floating "New comment below" button is rendered.
+
+## 20. Mobile Dropdown Positioning & Highlight Parameters URL Cleanup
+- **Decision:** Position the notification dropdown relative to the full screen viewport on mobile, and clean up URL query search params after the highlight animation completes.
+- **Rationale:** Ensures the notification list does not overflow or get cut off on mobile devices, and prevents page refresh or state change re-triggers of scroll/highlight animations by removing the `focusId` and `type` params from the URL.
+- **Technical Details:** The dropdown container class in `navbar.jsx` is updated to use Tailwind's `w-screen max-w-[calc(100vw-2rem)] sm:max-w-sm`. The `useSearchParams` hook is updated to include `setSearchParams` in `ComplaintDetailsPage.jsx` and `OfficerComplaintDetailPage.jsx` to clear the `focusId` and `type` search params after the 2000ms animation timer completes.
