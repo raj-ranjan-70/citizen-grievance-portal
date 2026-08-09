@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, X, Bell, Landmark } from "lucide-react";
+import { Menu, X, Bell, Landmark, Check } from "lucide-react";
 import { NotificationContext } from "@/context/NotificationContext";
 import { AuthContext } from "@/context/AuthContext";
 import { Button } from "../ui/button";
@@ -151,7 +151,6 @@ export const Navbar = React.forwardRef(({
                               key={n.id}
                               className="p-3 hover:bg-neutral-50 transition-colors flex items-start gap-2.5 cursor-pointer relative group"
                               onClick={() => {
-                                markAsRead(n.id);
                                 setDropdownOpen(false);
                                 if (n.relatedComplaintId) {
                                   const role = (authUser?.role || user?.role)?.toUpperCase();
@@ -166,7 +165,7 @@ export const Navbar = React.forwardRef(({
                               }}
                             >
                               <div className="size-2 rounded-full bg-primary mt-1.5 shrink-0" />
-                              <div className="flex-1 min-w-0 pr-6">
+                              <div className="flex-1 min-w-0 pr-2">
                                 <p className="text-xs text-neutral-700 font-medium leading-normal break-words">
                                   {n.message}
                                 </p>
@@ -179,10 +178,10 @@ export const Navbar = React.forwardRef(({
                                   e.stopPropagation();
                                   markAsRead(n.id);
                                 }}
-                                className="absolute right-2 top-3 p-1 rounded hover:bg-neutral-100 text-neutral-400 hover:text-neutral-600 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                className="p-1 rounded bg-neutral-50 hover:bg-success/15 text-neutral-400 hover:text-success transition-colors shrink-0 cursor-pointer self-center"
                                 title="Mark as read"
                               >
-                                ✕
+                                <Check className="size-4" />
                               </button>
                             </div>
                           ))

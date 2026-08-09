@@ -59,6 +59,12 @@ public class Complaint {
     @Column(name = "remarks", columnDefinition = "TEXT")
     private String remarks;
 
+    @Column(name = "citizen_last_viewed_at")
+    private LocalDateTime citizenLastViewedAt;
+
+    @Column(name = "officer_last_viewed_at")
+    private LocalDateTime officerLastViewedAt;
+
     @OneToMany(mappedBy = "complaint", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Comment> comments = new ArrayList<>();

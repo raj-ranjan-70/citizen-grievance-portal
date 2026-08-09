@@ -69,6 +69,21 @@ export const AdminDashboardPage = () => {
     }
   };
 
+  const fetchComplaintDetails = async (id) => {
+    try {
+      const details = await complaintService.getComplaint(id, "ADMIN");
+      setViewingComplaint(details);
+      
+      // Update local state list too
+      setComplaints((prev) =>
+        prev.map((c) => (c.id === details.id ? details : c))
+      );
+      return details;
+    } catch (err) {
+      console.error("Failed to fetch complaint details", err);
+    }
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -79,13 +94,31 @@ export const AdminDashboardPage = () => {
       setViewingComplaint(null);
       return;
     }
-    if (complaints.length === 0) return;
-    const found = complaints.find((c) => c.id === deepLinkComplaintId);
-    if (found) {
-      setViewingComplaint(found);
-      setActiveTab("complaints");
-    }
-  }, [deepLinkComplaintId, complaints]);
+    const loadDetails = async () => {
+      const details = await fetchComplaintDetails(deepLinkComplaintId);
+      if (details) {
+        setActiveTab("complaints");
+      }
+    };
+    loadDetails();
+  }, [deepLinkComplaintId]);
+
+  // Live sync from SSE notifications
+  useEffect(() => {
+    if (!viewingComplaint) return;
+
+    const handleLiveSync = (e) => {
+      const notification = e.detail;
+      if (notification && notification.relatedComplaintId === viewingComplaint.id) {
+        fetchComplaintDetails(viewingComplaint.id);
+      }
+    };
+
+    window.addEventListener("live-notification", handleLiveSync);
+    return () => {
+      window.removeEventListener("live-notification", handleLiveSync);
+    };
+  }, [viewingComplaint?.id]);
 
   const handleAssign = async (e) => {
     e.preventDefault();
@@ -600,20 +633,20 @@ export const AdminDashboardPage = () => {
               </div>
 
               {/* Citizen Attachments */}
-              {viewingComplaint.imageUuids && viewingComplaint.imageUuids.length > 0 && (
+              {viewingComplaint.imageDetails && viewingComplaint.imageDetails.length > 0 && (
                 <div className="space-y-1.5">
-                  <h4 className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Citizen Attachments ({viewingComplaint.imageUuids.length})</h4>
+                  <h4 className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Citizen Attachments ({viewingComplaint.imageDetails.length})</h4>
                   <div className="grid grid-cols-3 gap-2">
-                    {viewingComplaint.imageUuids.map((uuid) => (
+                    {viewingComplaint.imageDetails.map((img) => (
                       <a
-                        key={uuid}
-                        href={`${import.meta.env.VITE_R2_PUBLIC_URL}/${uuid}.webp`}
+                        key={img.imageUuid}
+                        href={`${import.meta.env.VITE_R2_PUBLIC_URL}/${img.imageUuid}.webp`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="block aspect-video rounded-md overflow-hidden border border-neutral-200 bg-neutral-50 hover:opacity-85 transition-opacity"
                       >
                         <img
-                          src={`${import.meta.env.VITE_R2_PUBLIC_URL}/${uuid}.webp`}
+                          src={`${import.meta.env.VITE_R2_PUBLIC_URL}/${img.imageUuid}.webp`}
                           alt="Attachment"
                           className="size-full object-cover"
                         />

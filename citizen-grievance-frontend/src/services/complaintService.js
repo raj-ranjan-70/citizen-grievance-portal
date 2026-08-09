@@ -30,9 +30,15 @@ export const complaintService = {
     return list.map(mapComplaintStatus);
   },
 
-  getComplaint: async (id) => {
-    const response = await api.get(`/v1/citizen/complaints/${id}`);
+  getComplaint: async (id, role = "CITIZEN") => {
+    const prefix = role?.toUpperCase() === "OFFICER" ? "officer" : (role?.toUpperCase() === "ADMIN" ? "admin" : "citizen");
+    const response = await api.get(`/v1/${prefix}/complaints/${id}`);
     return mapComplaintStatus(response.data.data);
+  },
+
+  updateLastViewedAt: async (id) => {
+    const response = await api.put(`/v1/complaints/${id}/view`);
+    return response.data;
   },
 
   updateComplaint: async (id, data) => {

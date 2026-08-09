@@ -55,6 +55,24 @@ export const OfficerDashboardPage = () => {
     }
   };
 
+  const fetchComplaintDetails = async (id) => {
+    try {
+      const details = await complaintService.getComplaint(id, "OFFICER");
+      setSelectedComplaint(details);
+      
+      // Update local state list items too so they match the loaded data
+      setActiveComplaints((prev) =>
+        prev.map((c) => (c.id === details.id ? details : c))
+      );
+      setHistoryComplaints((prev) =>
+        prev.map((c) => (c.id === details.id ? details : c))
+      );
+      return details;
+    } catch (err) {
+      console.error("Failed to fetch complaint details", err);
+    }
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -67,17 +85,50 @@ export const OfficerDashboardPage = () => {
       setActiveModal(null);
       return;
     }
-    if (activeComplaints.length === 0) return;
-    const found = activeComplaints.find((c) => c.id === deepLinkComplaintId)
-      || historyComplaints.find((c) => c.id === deepLinkComplaintId);
-    if (found) {
-      setSelectedComplaint(found);
-      setActiveModal("view");
-      if (historyComplaints.some((c) => c.id === deepLinkComplaintId)) {
-        setActiveTab("history");
+    const loadDetails = async () => {
+      const details = await fetchComplaintDetails(deepLinkComplaintId);
+      if (details) {
+        setActiveModal("view");
+        if (details.status === "RESOLVED" || details.status === "REJECTED") {
+          setActiveTab("history");
+        } else {
+          setActiveTab("active");
+        }
       }
-    }
-  }, [deepLinkComplaintId, activeComplaints, historyComplaints]);
+    };
+    loadDetails();
+  }, [deepLinkComplaintId]);
+
+  // Live sync from SSE notifications
+  useEffect(() => {
+    if (!selectedComplaint) return;
+
+    const handleLiveSync = (e) => {
+      const notification = e.detail;
+      if (notification && notification.relatedComplaintId === selectedComplaint.id) {
+        fetchComplaintDetails(selectedComplaint.id);
+      }
+    };
+
+    window.addEventListener("live-notification", handleLiveSync);
+    return () => {
+      window.removeEventListener("live-notification", handleLiveSync);
+    };
+  }, [selectedComplaint?.id]);
+
+  // Mark as viewed when selectedComplaint opens
+  useEffect(() => {
+    if (!selectedComplaint) return;
+
+    const triggerViewReceipt = async () => {
+      try {
+        await complaintService.updateLastViewedAt(selectedComplaint.id);
+      } catch (err) {
+        console.error("Failed to update viewed receipt", err);
+      }
+    };
+    triggerViewReceipt();
+  }, [selectedComplaint?.id]);
 
   const handlePostComment = async (e) => {
     e.preventDefault();
@@ -426,25 +477,35 @@ export const OfficerDashboardPage = () => {
               </div>
 
               {/* Citizen Attachments (If any) */}
-              {selectedComplaint.imageUuids && selectedComplaint.imageUuids.length > 0 && (
+              {selectedComplaint.imageDetails && selectedComplaint.imageDetails.length > 0 && (
                 <div className="space-y-1.5">
-                  <h4 className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Attachments ({selectedComplaint.imageUuids.length})</h4>
+                  <h4 className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Attachments ({selectedComplaint.imageDetails.length})</h4>
                   <div className="grid grid-cols-3 gap-2">
-                    {selectedComplaint.imageUuids.map((uuid) => (
-                      <a
-                        key={uuid}
-                        href={`${import.meta.env.VITE_R2_PUBLIC_URL}/${uuid}.webp`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block aspect-video rounded-md overflow-hidden border border-neutral-200 bg-neutral-50 hover:opacity-85 transition-opacity"
-                      >
-                        <img
-                          src={`${import.meta.env.VITE_R2_PUBLIC_URL}/${uuid}.webp`}
-                          alt="Attachment"
-                          className="size-full object-cover"
-                        />
-                      </a>
-                    ))}
+                    {selectedComplaint.imageDetails.map((img) => {
+                      const isNew = selectedComplaint.officerLastViewedAt && 
+                        new Date(img.uploadedAt) > new Date(selectedComplaint.officerLastViewedAt);
+                      return (
+                        <div key={img.imageUuid} className="relative group">
+                          <a
+                            href={`${import.meta.env.VITE_R2_PUBLIC_URL}/${img.imageUuid}.webp`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block aspect-video rounded-md overflow-hidden border border-neutral-200 bg-neutral-50 hover:opacity-85 transition-opacity"
+                          >
+                            <img
+                              src={`${import.meta.env.VITE_R2_PUBLIC_URL}/${img.imageUuid}.webp`}
+                              alt="Attachment"
+                              className="size-full object-cover"
+                            />
+                          </a>
+                          {isNew && (
+                            <span className="absolute top-1 left-1 bg-success text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow">
+                              New
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -493,26 +554,35 @@ export const OfficerDashboardPage = () => {
                       No discussions recorded. Add a note below to update the citizen.
                     </div>
                   ) : (
-                    selectedComplaint.comments.map((comment) => (
-                      <div
-                        key={comment.id}
-                        className={`flex flex-col gap-1 p-3 rounded-lg border text-sm ${
-                          comment.authorRole === "OFFICER"
-                            ? "bg-primary/5 border-primary/10 ml-6"
-                            : "bg-white border-neutral-200 mr-6"
-                        }`}
-                      >
-                        <div className="flex justify-between items-center text-[10px] font-semibold">
-                          <span className={comment.authorRole === "OFFICER" ? "text-primary" : "text-neutral-700"}>
-                            {comment.authorName} ({comment.authorRole})
-                          </span>
-                          <span className="text-neutral-400">
-                            {new Date(comment.createdAt).toLocaleString()}
-                          </span>
+                    selectedComplaint.comments.map((comment) => {
+                      const isNew = selectedComplaint.officerLastViewedAt && 
+                        new Date(comment.createdAt) > new Date(selectedComplaint.officerLastViewedAt);
+                      return (
+                        <div
+                          key={comment.id}
+                          className={`flex flex-col gap-1 p-3 rounded-lg border text-sm relative ${
+                            comment.authorRole === "OFFICER"
+                              ? "bg-primary/5 border-primary/10 ml-6"
+                              : "bg-white border-neutral-200 mr-6"
+                          }`}
+                        >
+                          <div className="flex justify-between items-center text-[10px] font-semibold">
+                            <span className={comment.authorRole === "OFFICER" ? "text-primary" : "text-neutral-700"}>
+                              {comment.authorName} ({comment.authorRole})
+                              {isNew && (
+                                <span className="ml-2 bg-success text-white text-[8px] px-1 py-0.5 rounded font-bold uppercase tracking-wide">
+                                  New
+                                </span>
+                              )}
+                            </span>
+                            <span className="text-neutral-400">
+                              {new Date(comment.createdAt).toLocaleString()}
+                            </span>
+                          </div>
+                          <p className="text-neutral-700 font-medium leading-normal mt-0.5">{comment.content}</p>
                         </div>
-                        <p className="text-neutral-700 font-medium leading-normal mt-0.5">{comment.content}</p>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
 

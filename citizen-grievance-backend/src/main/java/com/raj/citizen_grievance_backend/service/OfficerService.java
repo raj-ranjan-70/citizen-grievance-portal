@@ -2,6 +2,7 @@ package com.raj.citizen_grievance_backend.service;
 
 import com.raj.citizen_grievance_backend.dto.CommentRequest;
 import com.raj.citizen_grievance_backend.dto.CommentResponse;
+import com.raj.citizen_grievance_backend.dto.ComplaintImageResponse;
 import com.raj.citizen_grievance_backend.dto.ComplaintResponse;
 import com.raj.citizen_grievance_backend.entity.Comment;
 import com.raj.citizen_grievance_backend.entity.Complaint;
@@ -236,6 +237,14 @@ public class OfficerService {
                         .map(com.raj.citizen_grievance_backend.entity.ComplaintImage::getImageUuid)
                         .collect(Collectors.toList()) : java.util.Collections.emptyList();
 
+        List<ComplaintImageResponse> imageDetails = complaint.getImages() != null ?
+                complaint.getImages().stream()
+                        .map(img -> ComplaintImageResponse.builder()
+                                .imageUuid(img.getImageUuid())
+                                .uploadedAt(img.getUploadedAt())
+                                .build())
+                        .collect(Collectors.toList()) : java.util.Collections.emptyList();
+
         return ComplaintResponse.builder()
                 .id(complaint.getId())
                 .title(complaint.getTitle())
@@ -246,12 +255,26 @@ public class OfficerService {
                 .citizenName(complaint.getCitizen().getName())
                 .citizenEmail(complaint.getCitizen().getEmail())
                 .assignedOfficerName(complaint.getAssignedOfficer() != null ? complaint.getAssignedOfficer().getName() : null)
+                .assignedOfficerDepartment(complaint.getAssignedOfficer() != null && complaint.getAssignedOfficer().getDepartment() != null ? complaint.getAssignedOfficer().getDepartment().name() : null)
+                .citizenLastViewedAt(complaint.getCitizenLastViewedAt())
+                .officerLastViewedAt(complaint.getOfficerLastViewedAt())
                 .createdAt(complaint.getCreatedAt())
                 .updatedAt(complaint.getUpdatedAt())
                 .comments(comments)
                 .imageUuids(imageUuids)
+                .imageDetails(imageDetails)
                 .resolutionImageUuid(complaint.getResolutionImageUuid())
                 .remarks(complaint.getRemarks())
                 .build();
+    }
+
+    public ComplaintResponse getComplaintDetails(UUID complaintId, UUID officerId) {
+        verifyOfficer(officerId);
+        Complaint complaint = complaintRepository.findById(complaintId)
+                .orElseThrow(() -> new ResourceNotFoundException("Complaint not found with ID: " + complaintId));
+        if (complaint.getAssignedOfficer() == null || !complaint.getAssignedOfficer().getId().equals(officerId)) {
+            throw new ForbiddenException("Access Denied: This complaint is not assigned to you");
+        }
+        return mapToComplaintResponse(complaint);
     }
 }

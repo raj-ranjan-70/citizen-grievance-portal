@@ -14,7 +14,9 @@ import {
   Loader2,
   Calendar,
   AlertCircle,
-  Edit2
+  Edit2,
+  UserCheck,
+  Building
 } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import { useAuth } from "@/hooks/useAuth";
@@ -84,6 +86,8 @@ export const ComplaintDetailsPage = () => {
       try {
         const data = await complaintService.getComplaint(id);
         setComplaint(data);
+        // Update viewed receipt in background
+        complaintService.updateLastViewedAt(id).catch(console.error);
       } catch (err) {
         setError(err.response?.data?.message || "Failed to load complaint details.");
       } finally {
@@ -91,6 +95,21 @@ export const ComplaintDetailsPage = () => {
       }
     };
     fetchDetails();
+  }, [id]);
+
+  useEffect(() => {
+    const handleLiveSync = (e) => {
+      const notification = e.detail;
+      if (notification && notification.relatedComplaintId === id) {
+        complaintService.getComplaint(id)
+          .then(setComplaint)
+          .catch(console.error);
+      }
+    };
+    window.addEventListener("live-notification", handleLiveSync);
+    return () => {
+      window.removeEventListener("live-notification", handleLiveSync);
+    };
   }, [id]);
 
   const handleCommentSubmit = async (e) => {
@@ -276,8 +295,8 @@ export const ComplaintDetailsPage = () => {
             </h1>
           </div>
 
-          {/* Timestamp details */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-lg bg-neutral-50 border border-neutral-100 text-xs text-neutral-600 font-medium">
+          {/* Timestamp and Officer details */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4 rounded-lg bg-neutral-50 border border-neutral-100 text-xs text-neutral-600 font-medium">
             <div className="flex items-center gap-2">
               <Calendar className="size-4 text-neutral-400 shrink-0" />
               <div>
@@ -292,6 +311,26 @@ export const ComplaintDetailsPage = () => {
                 <p className="text-[10px] text-neutral-400 uppercase tracking-wider">Last Updated</p>
                 <p className="text-neutral-800 mt-0.5">
                   {complaint.updatedAt ? formatDate(complaint.updatedAt) : "No updates recorded"}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <UserCheck className="size-4 text-neutral-400 shrink-0" />
+              <div>
+                <p className="text-[10px] text-neutral-400 uppercase tracking-wider">Assigned Officer</p>
+                <p className="text-neutral-800 mt-0.5 font-bold">
+                  {complaint.assignedOfficerName || "Unassigned"}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Building className="size-4 text-neutral-400 shrink-0" />
+              <div>
+                <p className="text-[10px] text-neutral-400 uppercase tracking-wider">Department</p>
+                <p className="text-neutral-800 mt-0.5 font-bold">
+                  {complaint.assignedOfficerDepartment || "N/A"}
                 </p>
               </div>
             </div>
@@ -329,25 +368,34 @@ export const ComplaintDetailsPage = () => {
               Grievance Attachments ({complaint.imageUuids?.length || 0})
             </Label>
             
-            {complaint.imageUuids && complaint.imageUuids.length > 0 && (
+            {complaint.imageDetails && complaint.imageDetails.length > 0 && (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                {complaint.imageUuids.map((uuid) => (
-                  <div key={uuid} className="group relative aspect-video rounded-lg overflow-hidden border border-neutral-200 bg-neutral-100 hover:shadow-md transition-all">
-                    <img
-                      src={`${import.meta.env.VITE_R2_PUBLIC_URL}/${uuid}.webp`}
-                      alt="Grievance attachment"
-                      className="size-full object-cover"
-                    />
-                    <a
-                      href={`${import.meta.env.VITE_R2_PUBLIC_URL}/${uuid}.webp`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-semibold transition-opacity"
-                    >
-                      View Full Size
-                    </a>
-                  </div>
-                ))}
+                {complaint.imageDetails.map((img) => {
+                  const isNew = complaint.citizenLastViewedAt && 
+                    new Date(img.uploadedAt) > new Date(complaint.citizenLastViewedAt);
+                  return (
+                    <div key={img.imageUuid} className="group relative aspect-video rounded-lg overflow-hidden border border-neutral-200 bg-neutral-100 hover:shadow-md transition-all">
+                      <img
+                        src={`${import.meta.env.VITE_R2_PUBLIC_URL}/${img.imageUuid}.webp`}
+                        alt="Grievance attachment"
+                        className="size-full object-cover"
+                      />
+                      <a
+                        href={`${import.meta.env.VITE_R2_PUBLIC_URL}/${img.imageUuid}.webp`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-semibold transition-opacity"
+                      >
+                        View Full Size
+                      </a>
+                      {isNew && (
+                        <span className="absolute top-2 left-2 bg-success text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow z-10">
+                          New
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
 
@@ -437,10 +485,12 @@ export const ComplaintDetailsPage = () => {
               <div className="space-y-4">
                 {complaint.comments.map((comment) => {
                   const isOfficer = comment.authorRole === "OFFICER" || comment.authorRole === "ADMIN";
+                  const isNew = complaint.citizenLastViewedAt && 
+                    new Date(comment.createdAt) > new Date(complaint.citizenLastViewedAt);
                   return (
                     <div
                       key={comment.id}
-                      className={`flex flex-col p-4 rounded-lg border text-sm max-w-[85%] ${
+                      className={`flex flex-col p-4 rounded-lg border text-sm max-w-[85%] relative ${
                         isOfficer
                           ? "bg-primary/5 border-primary/20 mr-auto text-neutral-800"
                           : "bg-neutral-50 border-neutral-200 ml-auto text-neutral-800"
@@ -452,6 +502,11 @@ export const ComplaintDetailsPage = () => {
                           {isOfficer && (
                             <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20 uppercase font-semibold">
                               Officer
+                            </span>
+                          )}
+                          {isNew && (
+                            <span className="text-[9px] bg-success text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">
+                              New
                             </span>
                           )}
                         </span>

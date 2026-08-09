@@ -137,4 +137,31 @@ public class AdminController {
                 .build();
         return ResponseEntity.ok(apiResponse);
     }
+
+    @GetMapping("/complaints/{id}")
+    @Operation(summary = "Get single complaint details", description = "Allows admins to view a specific complaint's details")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Complaint details retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Not authenticated",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Access denied: Admin role required",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Complaint not found",
+                    content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+    })
+    public ResponseEntity<ApiResponse<ComplaintResponse>> getComplaintDetails(
+            @PathVariable UUID id,
+            HttpServletRequest servletRequest) {
+
+        UUID adminId = getAuthenticatedUserId(servletRequest);
+        ComplaintResponse response = adminService.getComplaintDetails(id, adminId);
+
+        ApiResponse<ComplaintResponse> apiResponse = ApiResponse.<ComplaintResponse>builder()
+                .success(true)
+                .message("Complaint details retrieved successfully")
+                .data(response)
+                .build();
+        return ResponseEntity.ok(apiResponse);
+    }
 }
