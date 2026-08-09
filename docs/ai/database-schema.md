@@ -90,5 +90,7 @@ Maps to the `Notification` entity. Stores user notifications.
 | `recipient_id` | `BINARY(16)` | `NOT NULL` | Reference to the User receiving the alert. |
 | `message` | `TEXT` | `NOT NULL` | Message contents. |
 | `related_complaint_id` | `BINARY(16)` | `NULLABLE` | Deep-linked Complaint UUID. |
+| `type` | `VARCHAR(50)` | `NULLABLE` | Type of notification event (e.g. COMMENT, STATUS, IMAGE). |
+| `target_entity_id` | `BINARY(16)` | `NULLABLE` | ID of the new entity triggering the notification (comment, image). |
 | `is_read` | `BOOLEAN` | `NOT NULL` | Status flag. |
 | `created_at` | `DATETIME(6)` | `NOT NULL` | Timestamp when notification was generated. |

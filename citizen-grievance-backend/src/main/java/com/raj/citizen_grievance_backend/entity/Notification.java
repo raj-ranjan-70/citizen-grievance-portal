@@ -30,6 +30,13 @@ public class Notification {
     @Column(name = "related_complaint_id")
     private UUID relatedComplaintId;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type")
+    private NotificationType type;
+
+    @Column(name = "target_entity_id")
+    private UUID targetEntityId;
+
     @Column(name = "is_read", nullable = false)
     @Builder.Default
     private Boolean isRead = false;

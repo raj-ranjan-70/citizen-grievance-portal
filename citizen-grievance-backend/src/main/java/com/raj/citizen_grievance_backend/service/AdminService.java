@@ -105,14 +105,18 @@ public class AdminService {
         notificationService.sendNotification(
             officer.getId(),
             "A new complaint has been assigned to you: " + savedComplaint.getTitle(),
-            savedComplaint.getId()
+            savedComplaint.getId(),
+            NotificationType.STATUS,
+            null
         );
 
         // Notify citizen owner of assignment status change
         notificationService.sendNotification(
             savedComplaint.getCitizen().getId(),
             "Your complaint has been assigned to an officer: " + officer.getName(),
-            savedComplaint.getId()
+            savedComplaint.getId(),
+            NotificationType.STATUS,
+            null
         );
 
         return mapToComplaintResponse(savedComplaint);
@@ -136,6 +140,7 @@ public class AdminService {
                         .content(c.getContent())
                         .authorName(c.getAuthor().getName())
                         .authorRole(c.getAuthor().getRole().name())
+                        .authorId(c.getAuthor().getId())
                         .createdAt(c.getCreatedAt())
                         .build())
                 .collect(Collectors.toList());
@@ -148,6 +153,7 @@ public class AdminService {
         List<ComplaintImageResponse> imageDetails = complaint.getImages() != null ?
                 complaint.getImages().stream()
                         .map(img -> ComplaintImageResponse.builder()
+                                .id(img.getId())
                                 .imageUuid(img.getImageUuid())
                                 .uploadedAt(img.getUploadedAt())
                                 .build())

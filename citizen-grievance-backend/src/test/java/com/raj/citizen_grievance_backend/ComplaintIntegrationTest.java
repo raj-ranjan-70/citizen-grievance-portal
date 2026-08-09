@@ -125,7 +125,7 @@ class ComplaintIntegrationTest {
                 .priority("MEDIUM")
                 .build();
 
-        MvcResult result = mockMvc.perform(post("/api/v1/complaints")
+        MvcResult result = mockMvc.perform(post("/api/v1/citizen/complaints")
                         .cookie(userACookie)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -145,7 +145,7 @@ class ComplaintIntegrationTest {
     @Test
     @Order(2)
     void shouldListOwnComplaints() throws Exception {
-        mockMvc.perform(get("/api/v1/complaints")
+        mockMvc.perform(get("/api/v1/citizen/complaints")
                         .cookie(userACookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
@@ -156,7 +156,7 @@ class ComplaintIntegrationTest {
     @Test
     @Order(3)
     void shouldViewComplaintDetails() throws Exception {
-        mockMvc.perform(get("/api/v1/complaints/" + createdComplaintId)
+        mockMvc.perform(get("/api/v1/citizen/complaints/" + createdComplaintId)
                         .cookie(userACookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
@@ -168,7 +168,7 @@ class ComplaintIntegrationTest {
     @Test
     @Order(4)
     void shouldReturn401WhenNotAuthenticated() throws Exception {
-        mockMvc.perform(get("/api/v1/complaints"))
+        mockMvc.perform(get("/api/v1/citizen/complaints"))
                 .andExpect(status().isUnauthorized());
 
         ComplaintRequest request = ComplaintRequest.builder()
@@ -178,7 +178,7 @@ class ComplaintIntegrationTest {
                 .priority("MEDIUM")
                 .build();
 
-        mockMvc.perform(post("/api/v1/complaints")
+        mockMvc.perform(post("/api/v1/citizen/complaints")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized());
@@ -188,7 +188,7 @@ class ComplaintIntegrationTest {
     @Order(5)
     void shouldReturn404ForNonExistentComplaint() throws Exception {
         UUID nonExistentId = UUID.randomUUID();
-        mockMvc.perform(get("/api/v1/complaints/" + nonExistentId)
+        mockMvc.perform(get("/api/v1/citizen/complaints/" + nonExistentId)
                         .cookie(userACookie))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
@@ -205,7 +205,7 @@ class ComplaintIntegrationTest {
                 .priority("INVALID")
                 .build();
 
-        mockMvc.perform(post("/api/v1/complaints")
+        mockMvc.perform(post("/api/v1/citizen/complaints")
                         .cookie(userACookie)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
@@ -217,7 +217,7 @@ class ComplaintIntegrationTest {
     @Test
     @Order(7)
     void shouldReturn403WhenAccessingOtherUsersComplaint() throws Exception {
-        mockMvc.perform(get("/api/v1/complaints/" + createdComplaintId)
+        mockMvc.perform(get("/api/v1/citizen/complaints/" + createdComplaintId)
                         .cookie(userBCookie))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false))
@@ -227,7 +227,7 @@ class ComplaintIntegrationTest {
     @Test
     @Order(8)
     void shouldReturnEmptyListForUserWithNoComplaints() throws Exception {
-        mockMvc.perform(get("/api/v1/complaints")
+        mockMvc.perform(get("/api/v1/citizen/complaints")
                         .cookie(userBCookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
@@ -242,7 +242,7 @@ class ComplaintIntegrationTest {
                 .content("Citizen follow-up note.")
                 .build();
 
-        mockMvc.perform(post("/api/v1/complaints/" + createdComplaintId + "/comments")
+        mockMvc.perform(post("/api/v1/citizen/complaints/" + createdComplaintId + "/comments")
                         .cookie(userACookie)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(commentRequest)))
@@ -263,7 +263,7 @@ class ComplaintIntegrationTest {
                 .priority("HIGH")
                 .build();
 
-        mockMvc.perform(put("/api/v1/complaints/" + createdComplaintId)
+        mockMvc.perform(put("/api/v1/citizen/complaints/" + createdComplaintId)
                         .cookie(userACookie)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
@@ -284,7 +284,7 @@ class ComplaintIntegrationTest {
                 .priority("LOW")
                 .build();
 
-        MvcResult result = mockMvc.perform(post("/api/v1/complaints")
+        MvcResult result = mockMvc.perform(post("/api/v1/citizen/complaints")
                         .cookie(userACookie)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
@@ -301,7 +301,7 @@ class ComplaintIntegrationTest {
         complaintRepository.save(comp);
 
         // Attempt deletion, should fail with 400 Bad Request
-        mockMvc.perform(delete("/api/v1/complaints/" + tempId)
+        mockMvc.perform(delete("/api/v1/citizen/complaints/" + tempId)
                         .cookie(userACookie))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
@@ -319,7 +319,7 @@ class ComplaintIntegrationTest {
                 .priority("LOW")
                 .build();
 
-        MvcResult result = mockMvc.perform(post("/api/v1/complaints")
+        MvcResult result = mockMvc.perform(post("/api/v1/citizen/complaints")
                         .cookie(userACookie)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(req)))
@@ -331,14 +331,14 @@ class ComplaintIntegrationTest {
         UUID tempId = UUID.fromString(idStr);
 
         // Delete the complaint
-        mockMvc.perform(delete("/api/v1/complaints/" + tempId)
+        mockMvc.perform(delete("/api/v1/citizen/complaints/" + tempId)
                         .cookie(userACookie))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("Complaint deleted successfully"));
 
         // Verify it no longer exists
-        mockMvc.perform(get("/api/v1/complaints/" + tempId)
+        mockMvc.perform(get("/api/v1/citizen/complaints/" + tempId)
                         .cookie(userACookie))
                 .andExpect(status().isNotFound());
     }

@@ -64,7 +64,9 @@ public class ComplaintService {
             notificationService.sendNotification(
                 admin.getId(),
                 "A new complaint has been created: " + savedComplaint.getTitle(),
-                savedComplaint.getId()
+                savedComplaint.getId(),
+                NotificationType.STATUS,
+                null
             );
         }
 
@@ -159,7 +161,9 @@ public class ComplaintService {
             notificationService.sendNotification(
                 complaint.getAssignedOfficer().getId(),
                 "Citizen " + complaint.getCitizen().getName() + " uploaded a new image to: " + complaint.getTitle(),
-                complaint.getId()
+                complaint.getId(),
+                NotificationType.IMAGE,
+                complaintImage.getId()
             );
         }
 
@@ -195,14 +199,18 @@ public class ComplaintService {
                 notificationService.sendNotification(
                     complaint.getAssignedOfficer().getId(),
                     "Citizen " + author.getName() + " commented on: " + complaint.getTitle(),
-                    complaint.getId()
+                    complaint.getId(),
+                    NotificationType.COMMENT,
+                    savedComment.getId()
                 );
             }
         } else {
             notificationService.sendNotification(
                 complaint.getCitizen().getId(),
                 author.getName() + " commented on: " + complaint.getTitle(),
-                complaint.getId()
+                complaint.getId(),
+                NotificationType.COMMENT,
+                savedComment.getId()
             );
         }
 
@@ -223,6 +231,7 @@ public class ComplaintService {
         List<ComplaintImageResponse> imageDetails = complaint.getImages() != null ?
                 complaint.getImages().stream()
                         .map(img -> ComplaintImageResponse.builder()
+                                .id(img.getId())
                                 .imageUuid(img.getImageUuid())
                                 .uploadedAt(img.getUploadedAt())
                                 .build())
@@ -257,6 +266,7 @@ public class ComplaintService {
                 .content(comment.getContent())
                 .authorName(comment.getAuthor().getName())
                 .authorRole(comment.getAuthor().getRole().name())
+                .authorId(comment.getAuthor().getId())
                 .createdAt(comment.getCreatedAt())
                 .build();
     }
