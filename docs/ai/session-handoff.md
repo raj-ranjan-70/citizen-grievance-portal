@@ -1,29 +1,26 @@
-# Session Handoff — Phase 11: Full-Page Routing & Viewport-Aware Notifications
+# Session Handoff — Phase 12: Notification & Routing Refinement
 
 ## Status: COMPLETE ✅
 
 ## What Was Accomplished
 
 ### Git Branch
-Staged, committed, and merged `feature/fullpage-routing-smart-notifications` into `master` branch.
+Staged, committed, and merged `feature/mark-all-read-and-back-button-fixes` into `master` branch.
 
 ### Backend Changes
-1. Created `NotificationType` enum with COMMENT, STATUS, and IMAGE constants.
-2. Added `type` (NotificationType) and `targetEntityId` (UUID) columns to the `Notification` entity.
-3. Updated `NotificationResponse` DTO to return type and targetEntityId.
-4. Added `authorId` to `CommentResponse` DTO and `id` to `ComplaintImageResponse` DTO.
-5. Updated `sendNotification` in `NotificationService` and updated trigger sites in `ComplaintService`, `OfficerService`, and `AdminService` to pass specific notification types and target UUIDs.
+1. Created new Swagger-annotated PUT endpoint `/api/v1/notifications/read-all` in `NotificationController.java`.
+2. Implemented `markAllAsRead(UUID userId)` in `NotificationService.java` to set `isRead = true` for all unread notifications.
+3. Added `authorId` property to `ComplaintImageResponse.java` DTO.
+4. Updated image mapping logic in `ComplaintService.java`, `OfficerService.java`, and `AdminService.java` to populate `authorId` using the complaint's citizen ID.
 
 ### Frontend Changes
-1. Added full-page details route `/officer/complaints/:id` mapping to `OfficerComplaintDetailPage`.
-2. Created `OfficerComplaintDetailPage` replacing dashboard modals with dedicated views, containing comment section, action buttons, scroll-and-highlight, and viewport monitoring.
-3. Updated `NotificationContext.jsx` to intercept incoming notifications; if a notification corresponds to the complaint currently being viewed, it updates the page but suppresses unread increments, automatically making a read API call in the background.
-4. Updated `navbar.jsx` to pass `focusId` and `type` params in URL query strings.
-5. Implemented `IntersectionObserver` on both Citizen and Officer details pages to show a floating "New comment below" alert when comment feed updates happen out-of-viewport.
-6. Implemented automatic ref scroll-into-view and yellow highlight for targeted comments and images.
-7. Refined "New" indicators to suppress badges on own-authored actions.
-8. Fixed mobile notification dropdown cut-off by positioning relative to viewport width (`w-screen max-w-[calc(100vw-2rem)] sm:max-w-sm`).
-9. Added URL query parameter cleanup via `setSearchParams` inside scroll-and-highlight `useEffect` to remove `focusId` and `type` params after the 2000ms animation timer expires.
+1. Added `markAllAsRead` method to `notificationService.js` and exposed it in `NotificationContext.jsx`.
+2. Updated notification dropdown styles to use `fixed` mobile positioning (`fixed top-16 right-2 w-[calc(100vw-1rem)] z-50 sm:absolute sm:top-full sm:right-0 sm:w-80 sm:mt-2`).
+3. Added "Mark all as read" button at the top header of the dropdown list.
+4. Simplified click-to-read behavior: clicking on any list item immediately marks it as read and redirects. Removed the separate checkmark button.
+5. Moved details pages Back button into the normal layout flow right above cards, aligning with responsive hidden text classes (`hidden sm:inline`).
+6. Changed Back button route action from `navigate(-1)` to explicit role-aware dashboard routes (`/citizen/dashboard` and `/officer/dashboard`).
+7. Updated "New" badge conditions to evaluate `img.authorId !== user?.id` for image attachments.
 
 ---
 
