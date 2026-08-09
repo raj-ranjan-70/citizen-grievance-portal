@@ -133,7 +133,7 @@ export const Navbar = React.forwardRef(({
 
                   {/* Dropdown Menu */}
                   {dropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-80 rounded-lg border border-neutral-200 bg-white shadow-xl py-1 z-50 animate-fadeIn text-sm">
+                    <div className="absolute right-0 top-full mt-2 w-screen max-w-[calc(100vw-2rem)] sm:max-w-sm rounded-lg border border-neutral-200 bg-white shadow-xl py-1 z-50 animate-fadeIn text-sm">
                       <div className="px-4 py-2.5 border-b border-neutral-100 flex items-center justify-between bg-neutral-50/50">
                         <span className="font-bold text-neutral-800">Notifications</span>
                         <span className="text-[10px] font-semibold bg-neutral-200 text-neutral-700 px-2 py-0.5 rounded-full">

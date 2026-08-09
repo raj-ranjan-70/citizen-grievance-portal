@@ -25,7 +25,7 @@ import { useAuth } from "@/hooks/useAuth";
 export const ComplaintDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
 
   const focusId = searchParams.get("focusId");
@@ -159,27 +159,49 @@ export const ComplaintDetailsPage = () => {
   useEffect(() => {
     if (!complaint || !focusId) return;
 
+    let highlightTimer;
+    let urlCleanupTimer;
+
     const scrollTimer = setTimeout(() => {
+      let elementFound = false;
+
       if (focusType === "COMMENT" && commentRefs.current[focusId]) {
         commentRefs.current[focusId].scrollIntoView({ behavior: "smooth", block: "center" });
         setHighlightedId(focusId);
-        const timer = setTimeout(() => setHighlightedId(null), 2000);
-        return () => clearTimeout(timer);
+        elementFound = true;
       } else if (focusType === "IMAGE" && imageRefs.current[focusId]) {
         imageRefs.current[focusId].scrollIntoView({ behavior: "smooth", block: "center" });
         setHighlightedId(focusId);
-        const timer = setTimeout(() => setHighlightedId(null), 2000);
-        return () => clearTimeout(timer);
+        elementFound = true;
       } else if (focusType === "STATUS" && statusRef.current) {
         statusRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
         setHighlightStatus(true);
-        const timer = setTimeout(() => setHighlightStatus(false), 2000);
-        return () => clearTimeout(timer);
+        elementFound = true;
+      }
+
+      if (elementFound) {
+        // Remove highlights after 2000ms
+        highlightTimer = setTimeout(() => {
+          setHighlightedId(null);
+          setHighlightStatus(false);
+        }, 2000);
+
+        // Remove search params from URL after 2000ms without reload
+        urlCleanupTimer = setTimeout(() => {
+          const newParams = new URLSearchParams(searchParams);
+          newParams.delete("focusId");
+          newParams.delete("type");
+          setSearchParams(newParams, { replace: true });
+        }, 2000);
       }
     }, 400);
 
-    return () => clearTimeout(scrollTimer);
-  }, [complaint, focusId, focusType]);
+    return () => {
+      clearTimeout(scrollTimer);
+      if (highlightTimer) clearTimeout(highlightTimer);
+      if (urlCleanupTimer) clearTimeout(urlCleanupTimer);
+    };
+  }, [complaint, focusId, focusType, searchParams, setSearchParams]);
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
