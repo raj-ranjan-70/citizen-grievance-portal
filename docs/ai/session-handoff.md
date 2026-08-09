@@ -4,8 +4,15 @@
 
 ## What Was Accomplished
 
-### Git Branch
-Staged, committed, and merged bugfix branch `bugfix/chat-ui-new-badge-refinements` into `master` branch.
+### Git Branch & Remote
+1. Scrubbed repository git history using `git filter-branch` to remove all occurrences of the Cloudflare tokens and secrets.
+2. Configured remote repository `origin` as `https://github.com/raj-ranjan-70/citizen-grievance-portal.git`.
+3. Pushed the clean `master` branch to remote repository.
+
+### Configuration & Security Updates
+1. Created `application-prod.properties` to hold active production secrets and Cloudflare keys.
+2. Updated root and backend `.gitignore` files to ignore `application-prod.properties` files.
+3. Substituted real Cloudflare access credentials in main and test `application.properties` files with safe placeholders, ensuring the endpoint contains a valid `https://` prefix to prevent Spring context startup errors.
 
 ### Backend Changes
 1. Created new Swagger-annotated PUT endpoint `/api/v1/notifications/read-all` in `NotificationController.java`.
