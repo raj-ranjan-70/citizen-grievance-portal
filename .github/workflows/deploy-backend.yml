@@ -1,0 +1,88 @@
+name: Build & Deploy Backend
+
+# Triggers on every push to master, but ONLY when backend-related files change.
+# This avoids running the pipeline for pure frontend or documentation changes.
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "citizen-grievance-backend/**"
+      - ".github/workflows/deploy-backend.yml"
+
+jobs:
+  build-and-deploy:
+    name: Build JAR & Deploy to Oracle Cloud
+    runs-on: ubuntu-latest
+
+    steps:
+      # -----------------------------------------------------------------------
+      # Step 1: Check out the full source code at the latest commit.
+      # -----------------------------------------------------------------------
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # -----------------------------------------------------------------------
+      # Step 2: Set up Java 17 (Temurin distribution) and enable Maven
+      # dependency caching via the built-in `cache: 'maven'` option.
+      # The cache key is derived from the pom.xml file so it is only
+      # invalidated when dependencies actually change.
+      # -----------------------------------------------------------------------
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: "maven"
+
+      # -----------------------------------------------------------------------
+      # Step 3: Build the executable fat JAR with Maven.
+      # Tests are skipped here because they require a live MySQL database.
+      # -----------------------------------------------------------------------
+      - name: Build JAR (skip tests)
+        run: mvn clean package -DskipTests --no-transfer-progress
+        working-directory: citizen-grievance-backend
+
+      # -----------------------------------------------------------------------
+      # Step 4: Transfer the compiled JAR to the production server via SCP.
+      # The artifact is uploaded to a staging path first, then an SSH command
+      # atomically moves it to the live path, preventing downtime from a
+      # partial file transfer.
+      #
+      # Required GitHub Secrets:
+      #   SERVER_IP          — Public IP address of the Oracle Cloud instance
+      #   SERVER_USERNAME    — SSH login user (e.g., ubuntu)
+      #   SERVER_SSH_KEY     — Full PEM private key for SSH authentication
+      # -----------------------------------------------------------------------
+      - name: Transfer JAR to Server via SCP
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "citizen-grievance-backend/target/*.jar"
+          target: "/var/www/citizen-grievance/staging/"
+          strip_components: 2
+
+      # -----------------------------------------------------------------------
+      # Step 5: SSH into the server to atomically replace the live JAR and
+      # restart the systemd service.
+      # The `ubuntu` user has been pre-granted passwordless sudo access for
+      # the `systemctl restart citizen-grievance` command via visudo.
+      # -----------------------------------------------------------------------
+      - name: Deploy & Restart Service via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            # Atomically replace the live JAR with the freshly uploaded build.
+            mv /var/www/citizen-grievance/staging/*.jar /var/www/citizen-grievance/app.jar
+
+            # Restart the native systemd service.
+            sudo systemctl restart citizen-grievance
+
+            # Confirm the service came back up successfully (exits non-zero
+            # if the service is in a failed state, which fails the workflow).
+            sudo systemctl is-active --quiet citizen-grievance && echo "Service is running." || (echo "Service failed to start!" && exit 1)
